@@ -1,0 +1,1 @@
+# 2026-world-cup-predictions
