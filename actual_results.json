@@ -1,0 +1,173 @@
+{
+  "group_results": {
+    "A": [
+      {
+        "home": "Mexico",
+        "away": "South Africa",
+        "home_score": 2,
+        "away_score": 0
+      },
+      {
+        "home": "South Korea",
+        "away": "Czech Republic",
+        "home_score": 2,
+        "away_score": 1
+      }
+    ],
+    "B": [
+      {
+        "home": "Canada",
+        "away": "Bosnia and Herzegovina",
+        "home_score": 1,
+        "away_score": 1
+      },
+      {
+        "home": "Switzerland",
+        "away": "Qatar",
+        "home_score": 1,
+        "away_score": 1
+      }
+    ],
+    "D": [
+      {
+        "home": "United States",
+        "away": "Paraguay",
+        "home_score": 4,
+        "away_score": 1
+      },
+      {
+        "home": "Australia",
+        "away": "Turkey",
+        "home_score": 2,
+        "away_score": 0
+      }
+    ],
+    "C": [
+      {
+        "home": "Morocco",
+        "away": "Brazil",
+        "home_score": 1,
+        "away_score": 1
+      },
+      {
+        "home": "Scotland",
+        "away": "Haiti",
+        "home_score": 1,
+        "away_score": 0
+      }
+    ],
+    "E": [
+      {
+        "home": "Germany",
+        "away": "Cura\u00e7ao",
+        "home_score": 7,
+        "away_score": 1
+      },
+      {
+        "home": "Ivory Coast",
+        "away": "Ecuador",
+        "home_score": 1,
+        "away_score": 0
+      }
+    ],
+    "F": [
+      {
+        "home": "Japan",
+        "away": "Netherlands",
+        "home_score": 2,
+        "away_score": 2
+      },
+      {
+        "home": "Sweden",
+        "away": "Tunisia",
+        "home_score": 5,
+        "away_score": 1
+      }
+    ],
+    "H": [
+      {
+        "home": "Spain",
+        "away": "Cape Verde",
+        "home_score": 0,
+        "away_score": 0
+      },
+      {
+        "home": "Uruguay",
+        "away": "Saudi Arabia",
+        "home_score": 1,
+        "away_score": 1
+      }
+    ],
+    "G": [
+      {
+        "home": "Belgium",
+        "away": "Egypt",
+        "home_score": 1,
+        "away_score": 1
+      },
+      {
+        "home": "New Zealand",
+        "away": "Iran",
+        "home_score": 2,
+        "away_score": 2
+      }
+    ],
+    "I": [
+      {
+        "home": "France",
+        "away": "Senegal",
+        "home_score": 3,
+        "away_score": 1
+      },
+      {
+        "home": "Iraq",
+        "away": "Norway",
+        "home_score": 1,
+        "away_score": 4
+      }
+    ],
+    "J": [
+      {
+        "home": "Argentina",
+        "away": "Algeria",
+        "home_score": 3,
+        "away_score": 0
+      },
+      {
+        "home": "Austria",
+        "away": "Jordan",
+        "home_score": 3,
+        "away_score": 1
+      }
+    ],
+    "K": [
+      {
+        "home": "Portugal",
+        "away": "DR Congo",
+        "home_score": 1,
+        "away_score": 1
+      },
+      {
+        "home": "Uzbekistan",
+        "away": "Colombia",
+        "home_score": 1,
+        "away_score": 3
+      }
+    ],
+    "L": [
+      {
+        "home": "England",
+        "away": "Croatia",
+        "home_score": 4,
+        "away_score": 2
+      },
+      {
+        "home": "Ghana",
+        "away": "Panama",
+        "home_score": 1,
+        "away_score": 0
+      }
+    ]
+  },
+  "knockout_results": {}
+}
