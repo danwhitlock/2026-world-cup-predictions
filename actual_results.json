@@ -12,6 +12,18 @@
         "away": "Czech Republic",
         "home_score": 2,
         "away_score": 1
+      },
+      {
+        "home": "Czech Republic",
+        "away": "South Africa",
+        "home_score": 1,
+        "away_score": 1
+      },
+      {
+        "home": "Mexico",
+        "away": "South Korea",
+        "home_score": 1,
+        "away_score": 0
       }
     ],
     "B": [
@@ -26,6 +38,18 @@
         "away": "Qatar",
         "home_score": 1,
         "away_score": 1
+      },
+      {
+        "home": "Switzerland",
+        "away": "Bosnia and Herzegovina",
+        "home_score": 4,
+        "away_score": 1
+      },
+      {
+        "home": "Canada",
+        "away": "Qatar",
+        "home_score": 6,
+        "away_score": 0
       }
     ],
     "D": [

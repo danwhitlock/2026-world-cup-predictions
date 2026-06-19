@@ -48,7 +48,7 @@ def _run_simulation(n_sims: int) -> None:
     import pandas as pd
     from src.chart import generate_html
     from src.dixon_coles import DixonColesModel
-    from src.preprocessing import load_matches
+    from src.preprocessing import load_matches, load_ranking_priors
     from src.simulator import simulate_tournament
     from src.tournament_state import actual_results_as_dataframe
 
@@ -60,8 +60,9 @@ def _run_simulation(n_sims: int) -> None:
         matches = pd.concat([matches, actual_df], ignore_index=True)
 
     _sim_status["message"] = "Fitting model…"
+    ranking_priors = load_ranking_priors()
     model = DixonColesModel()
-    model.fit(matches, verbose=False)
+    model.fit(matches, verbose=False, ranking_priors=ranking_priors or None)
 
     _sim_status["message"] = f"Simulating {n_sims:,} tournaments…"
     stats, group_outcomes = simulate_tournament(

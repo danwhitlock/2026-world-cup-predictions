@@ -9,6 +9,9 @@ from typing import Dict, List, Tuple
 
 from .fixtures import GROUPS, ALL_TEAMS, DISPLAY_NAMES
 
+_HOST_NATIONS = frozenset({"United States", "Canada", "Mexico"})
+_HOST_HFA_SCALE = 0.4  # 40 % of the learned home-advantage coefficient
+
 
 # ---------------------------------------------------------------------------
 # Group stage
@@ -45,7 +48,15 @@ def _group_standings(teams: List[str], model, rng: np.random.Generator,
     for t1, t2 in combinations(teams, 2):
         if frozenset({t1, t2}) in actual_played:
             continue
-        s1, s2 = model.sample_score(t1, t2, neutral=True, rng=rng)
+        # Host nations (USA, Canada, Mexico) get a partial home advantage
+        if t1 in _HOST_NATIONS:
+            s1, s2 = model.sample_score(t1, t2, neutral=False,
+                                        hfa_scale=_HOST_HFA_SCALE, rng=rng)
+        elif t2 in _HOST_NATIONS:
+            s2, s1 = model.sample_score(t2, t1, neutral=False,
+                                        hfa_scale=_HOST_HFA_SCALE, rng=rng)
+        else:
+            s1, s2 = model.sample_score(t1, t2, neutral=True, rng=rng)
         mresults[(t1, t2)] = (s1, s2)
         record[t1]["gf"] += s1;  record[t1]["ga"] += s2
         record[t2]["gf"] += s2;  record[t2]["ga"] += s1
@@ -253,11 +264,11 @@ def _single_sim(model, groups: dict, stats: dict, group_outcomes: dict,
         r32.append((winners_by_group[g1], runners_by_group[g2]))
         r32.append((winners_by_group[g2], runners_by_group[g1]))
 
-    # Shuffle best thirds to avoid predictable pairings
-    shuffled_thirds = list(best_thirds)
-    rng.shuffle(shuffled_thirds)
-    for i in range(0, 8, 2):
-        r32.append((shuffled_thirds[i], shuffled_thirds[i + 1]))
+    # Seeded bracket for the 8 best thirds: strongest vs weakest (1v8, 2v7, 3v6, 4v5).
+    # thirds is already sorted best-first by (pts, gd, gf).
+    n = len(best_thirds)
+    for k in range(n // 2):
+        r32.append((best_thirds[k], best_thirds[n - 1 - k]))
 
     r32_flat = [t for pair in r32 for t in pair]  # 32 teams in bracket order
 

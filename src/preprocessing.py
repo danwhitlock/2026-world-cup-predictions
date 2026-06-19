@@ -16,7 +16,7 @@ _TOURNAMENT_WEIGHTS = [
     ('CONCACAF Gold Cup',            0.85),
     ('OFC Nations Cup',              0.85),
     ('FIFA Confederations Cup',      0.85),
-    ('World Cup qualification',      0.80),
+    ('World Cup qualification',      0.85),
     ('Euro qualification',           0.75),
     ('African Cup of Nations qual',  0.70),
     ('Friendly',                     0.50),
@@ -35,7 +35,20 @@ def _build_former_name_map() -> dict:
     return dict(zip(df["former"], df["current"]))
 
 
-def load_matches(xi: float = 0.004, min_date: str = "1993-01-01") -> pd.DataFrame:
+def load_ranking_priors() -> dict[str, float]:
+    """
+    Load FIFA ranking points from data/fifa_rankings.csv.
+    Used to initialise attack parameters for data-sparse teams.
+    Returns {} if the file is missing.
+    """
+    path = DATA_DIR / "fifa_rankings.csv"
+    if not path.exists():
+        return {}
+    df = pd.read_csv(path)
+    return dict(zip(df["team"], df["points"]))
+
+
+def load_matches(xi: float = 0.006, min_date: str = "1993-01-01") -> pd.DataFrame:
     """
     Load results.csv, apply time decay and tournament weights.
 

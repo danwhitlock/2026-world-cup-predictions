@@ -50,7 +50,8 @@ class DixonColesModel:
     # ------------------------------------------------------------------
 
     def fit(self, matches: pd.DataFrame,
-            l2: float = 0.01, verbose: bool = True) -> "DixonColesModel":
+            l2: float = 0.01, verbose: bool = True,
+            ranking_priors: dict[str, float] | None = None) -> "DixonColesModel":
         """
         Fit the model to a DataFrame with columns:
           home_team, away_team, home_score, away_score, neutral_bool, weight
@@ -85,6 +86,18 @@ class DixonColesModel:
         n_params = 2 * n + 2
         x0 = np.zeros(n_params)
         x0[-1] = -0.1  # small initial rho
+
+        # Warm-start attack params from FIFA ranking points for data-sparse teams.
+        # Well-represented teams are overridden by the data anyway; the prior only
+        # meaningfully shifts teams with few historical matches (e.g. Curaçao, Haiti).
+        if ranking_priors:
+            valid_pts = [v for v in ranking_priors.values() if v > 0]
+            if valid_pts:
+                median_pts = float(np.median(valid_pts))
+                for i, team in enumerate(self.teams):
+                    pts = ranking_priors.get(team, 0.0)
+                    if pts > 0:
+                        x0[i] = np.log(pts / median_pts)
 
         def neg_ll(params):
             att = params[:n]
@@ -142,24 +155,26 @@ class DixonColesModel:
     # Prediction
     # ------------------------------------------------------------------
 
-    def _expected_goals(self, home: str, away: str, neutral: bool = True):
+    def _expected_goals(self, home: str, away: str,
+                        neutral: bool = True, hfa_scale: float = 1.0):
         att_h = self.attack.get(home, 0.0)
         def_h = self.defense.get(home, 0.0)
         att_a = self.attack.get(away, 0.0)
         def_a = self.defense.get(away, 0.0)
-        hfa = 0.0 if neutral else self.home_advantage
+        hfa = 0.0 if neutral else self.home_advantage * hfa_scale
         mu  = np.exp(att_h - def_a + hfa)
         lam = np.exp(att_a - def_h)
         return mu, lam
 
     def score_matrix(self, home: str, away: str,
-                     neutral: bool = True, max_goals: int = 8) -> np.ndarray:
+                     neutral: bool = True, max_goals: int = 8,
+                     hfa_scale: float = 1.0) -> np.ndarray:
         """Return P[i,j] = P(home scores i, away scores j)."""
-        cache_key = (home, away, neutral, max_goals)
+        cache_key = (home, away, neutral, max_goals, hfa_scale)
         if cache_key in self._score_cache:
             return self._score_cache[cache_key]
 
-        mu, lam = self._expected_goals(home, away, neutral)
+        mu, lam = self._expected_goals(home, away, neutral, hfa_scale)
         goals = np.arange(max_goals + 1)
         p_h = poisson.pmf(goals, mu)
         p_a = poisson.pmf(goals, lam)
@@ -195,19 +210,21 @@ class DixonColesModel:
     def sample_score(self, home: str, away: str,
                      neutral: bool = True, scale: float = 1.0,
                      rng: np.random.Generator = None,
-                     max_goals: int = 8) -> tuple[int, int]:
+                     max_goals: int = 8,
+                     hfa_scale: float = 1.0) -> tuple[int, int]:
         """
         Sample a scoreline from the model.
         scale < 1 reduces expected goals (used for extra-time simulation).
+        hfa_scale < 1 applies a partial home advantage (e.g. host nations at a WC).
         """
         if rng is None:
             rng = np.random.default_rng()
 
         if scale == 1.0:
-            m = self.score_matrix(home, away, neutral, max_goals)
+            m = self.score_matrix(home, away, neutral, max_goals, hfa_scale)
             flat = m.flatten()
         else:
-            mu, lam = self._expected_goals(home, away, neutral)
+            mu, lam = self._expected_goals(home, away, neutral, hfa_scale)
             mu  *= scale
             lam *= scale
             goals = np.arange(max_goals + 1)
