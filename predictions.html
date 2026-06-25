@@ -4,1143 +4,1040 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>2026 FIFA World Cup — Predictions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; }
+    /* === Design system: warm charcoal dark mode === */
+    :root {
+      --bg:        #1C1A15;
+      --surface:   #2A2620;
+      --surface-2: #332E26;
+      --border:    #3E3830;
+      --border-em: #4E4840;
+      --text:      #E8DFC8;
+      --text-2:    #9A9080;
+      --text-3:    #5E5848;
+      --orange:    #D46030;
+      --teal:      #2E9A8C;
+      --mustard:   #C8A022;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      margin: 0; padding: 0;
-      background: #0d1117;
-      color: #e6edf3;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Grotesk', system-ui, sans-serif;
     }
-    h2 {
-      font-size: 16px; font-weight: 600; color: #58a6ff;
-      border-bottom: 1px solid #30363d; padding-bottom: 8px; margin-top: 32px;
-      text-transform: uppercase; letter-spacing: 1px;
+
+    /* Drafting-table grid overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(232,223,200,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(232,223,200,0.04) 1px, transparent 1px);
+      background-size: 28px 28px;
     }
-    .container { max-width: 1600px; margin: 0 auto; padding: 20px 24px; }
+
+    /* --- Layout --- */
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* --- Header --- */
     .header {
-      text-align: center; padding: 32px 20px 24px;
-      background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
-      border-bottom: 1px solid #30363d;
+      text-align: center;
+      padding: 52px 24px 40px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      z-index: 1;
     }
-    .header h1 { margin: 0; font-size: 28px; color: #f0f6fc; }
-    .header p  { margin: 8px 0 0; color: #8b949e; font-size: 14px; }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .eyebrow-line { width: 24px; height: 1.5px; background: var(--orange); flex-shrink: 0; }
+
+    .eyebrow-text {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--orange);
+    }
+
+    .header h1 {
+      font-size: 34px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      line-height: 1.1;
+    }
+
+    .header .subtitle {
+      margin-top: 10px;
+      font-size: 14px;
+      color: var(--text-2);
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
     .badge {
-      display: inline-block; background: #21262d; border: 1px solid #30363d;
-      border-radius: 20px; padding: 4px 14px; font-size: 12px; color: #8b949e; margin: 4px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 5px 14px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-2);
     }
+
+    /* --- Section headings --- */
+    .section-head { margin-top: 48px; }
+
+    .section-eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .section-eyebrow .line { width: 20px; height: 1.5px; background: var(--orange); flex-shrink: 0; }
+
+    .section-eyebrow .label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--orange);
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text);
+    }
+
+    .section-note {
+      margin-top: 6px;
+      margin-bottom: 20px;
+      font-size: 12px;
+      color: var(--text-2);
+    }
+
+    /* --- Champion box --- */
     .champ-box {
-      text-align:center; background: linear-gradient(135deg, #21262d, #161b22);
-      border: 1px solid #f39c12; border-radius: 12px;
-      padding: 20px; margin: 16px auto; max-width: 320px;
+      text-align: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 28px 24px;
+      margin: 28px auto;
+      max-width: 300px;
+      position: relative;
     }
-    .champ-box .label { font-size: 12px; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; }
-    .champ-box .name  { font-size: 26px; font-weight: bold; color: gold; margin: 6px 0; }
-    .champ-box .pct   { font-size: 13px; color: #8b949e; }
+
+    .champ-box::before { content: ''; position: absolute; top: 0; left: 0; width: 28px; height: 3px; background: var(--mustard); }
+    .champ-box::after  { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 28px; background: var(--mustard); }
+    .champ-box .br { position: absolute; bottom: 0; right: 0; width: 28px; height: 28px; }
+    .champ-box .br::before { content: ''; position: absolute; bottom: 0; right: 0; width: 28px; height: 3px; background: var(--mustard); }
+    .champ-box .br::after  { content: ''; position: absolute; bottom: 0; right: 0; width: 3px; height: 28px; background: var(--mustard); }
+
+    .champ-box .champ-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-2);
+    }
+
+    .champ-box .champ-name {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--mustard);
+      margin: 10px 0 6px;
+    }
+
+    .champ-box .champ-pct { font-size: 13px; color: var(--text-2); }
+
+    /* --- Groups grid --- */
     .groups-grid {
       display: grid;
       grid-template-columns: repeat(6, 1fr);
-      gap: 12px; margin-top: 16px;
+      gap: 12px;
+      margin-top: 20px;
     }
-    @media (max-width: 1200px) {
-      .groups-grid { grid-template-columns: repeat(3, 1fr); }
+
+    @media (max-width: 1200px) { .groups-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 700px)  { .groups-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    .group-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      position: relative;
     }
-    @media (max-width: 700px) {
-      .groups-grid { grid-template-columns: repeat(2, 1fr); }
+
+    .group-card::before { content: ''; position: absolute; top: 0; left: 0; width: 20px; height: 2px; background: var(--orange); z-index: 1; }
+    .group-card::after  { content: ''; position: absolute; top: 0; left: 0; width: 2px; height: 20px; background: var(--orange); z-index: 1; }
+
+    .group-header {
+      padding: 9px 12px 9px 16px;
+      background: var(--surface-2);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-2);
+      border-bottom: 1px solid var(--border);
     }
-    .section-note { font-size: 12px; color: #8b949e; margin-bottom: 12px; }
-  </style>
+
+    .group-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .group-table tr { border-bottom: 1px solid var(--border); }
+    .group-table tr:last-child { border-bottom: none; }
+    .group-table td { padding: 5px 8px; }
+    .group-table td.pos { color: var(--text-3); width: 18px; padding-right: 4px; font-size: 11px; }
+    .group-table td.pct { text-align: right; font-size: 12px; }
+
+    .group-table tr.qual-1 { background: rgba(212,96,48,0.12); }
+    .group-table tr.qual-1 td { color: var(--text); font-weight: 600; }
+    .group-table tr.qual-1 td.pct { color: var(--orange); }
+
+    .group-table tr.qual-2 { background: rgba(46,154,140,0.10); }
+    .group-table tr.qual-2 td { color: var(--text); font-weight: 600; }
+    .group-table tr.qual-2 td.pct { color: var(--teal); }
+
+    .group-table tr.qual-3 { background: rgba(200,160,34,0.07); }
+    .group-table tr.qual-3 td { color: var(--text-2); }
+    .group-table tr.qual-3 td.pct { color: var(--mustard); }
+
+    .group-table tr.out td { color: var(--text-2); }
+    .group-table tr.out td.pct { color: var(--text-3); }
+
+    /* --- Knockout bracket --- */
+    .bracket-wrap { overflow-x: auto; padding: 12px 0; }
+    .bracket { display: inline-flex; align-items: flex-start; gap: 0; }
+
+    .bracket-col-label {
+      text-align: center;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: 8px;
+      white-space: nowrap;
+      padding: 0 4px;
+    }
+
+    .bracket-matches {
+      display: flex;
+      flex-direction: column;
+      min-width: 170px;
+      padding: 0 4px;
+    }
+
+    .match {
+      border: 1px solid var(--border);
+      overflow: hidden;
+      margin: 2px 0;
+      background: var(--surface);
+    }
+
+    .match-row {
+      display: flex;
+      align-items: center;
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+
+    .match-row + .match-row { border-top: 1px solid var(--border); }
+
+    .match-row.winner {
+      background: rgba(212,96,48,0.15);
+      font-weight: 700;
+    }
+
+    .match-row span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .match-pct {
+      font-size: 10px;
+      color: var(--text-2);
+      margin-left: 6px;
+      min-width: 28px;
+      text-align: right;
+    }
+
+    .match-row.winner .match-pct { color: var(--orange); }
+
+    /* Final column */
+    .bracket-final {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 180px;
+      padding: 0 12px;
+    }
+
+    .final-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--mustard);
+      margin-bottom: 8px;
+    }
+
+    .final-champ { margin-top: 16px; text-align: center; }
+    .final-champ .label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--mustard);
+    }
+    .final-champ .name {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--mustard);
+      letter-spacing: -0.01em;
+      margin-top: 6px;
+    }
+    .final-champ .pct { font-size: 11px; color: var(--text-2); margin-top: 4px; }
+
+    /* --- Probability bars --- */
+    .prob-list { margin-top: 16px; }
+
+    .prob-row {
+      display: flex;
+      align-items: center;
+      margin: 5px 0;
+    }
+
+    .prob-name {
+      min-width: 145px;
+      font-size: 13px;
+      text-align: right;
+      padding-right: 14px;
+      color: var(--text);
+    }
+
+    .prob-track {
+      height: 3px;
+      background: var(--border);
+      position: relative;
+      flex: 1;
+      max-width: 320px;
+    }
+
+    .prob-fill { height: 100%; background: var(--orange); }
+
+    .prob-pct {
+      margin-left: 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-2);
+      min-width: 38px;
+    }
+
+    /* --- Light mode overrides --- */
+    html.light {
+      --bg:        #F5F0E4;
+      --surface:   #FDFAF3;
+      --surface-2: #F0EAD8;
+      --border:    #C8BEA8;
+      --border-em: #A89E8A;
+      --text:      #1E1E1E;
+      --text-2:    #6B6458;
+      --text-3:    #9A9080;
+      --orange:    #C4501E;
+      --teal:      #1A7A6E;
+      --mustard:   #B08818;
+    }
+
+    html.light body::before {
+      background-image:
+        linear-gradient(rgba(30,30,30,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(30,30,30,0.04) 1px, transparent 1px);
+    }
+
+    html.light .group-table tr.qual-1 { background: rgba(196,80,30,0.10); }
+    html.light .group-table tr.qual-2 { background: rgba(26,122,110,0.08); }
+    html.light .group-table tr.qual-3 { background: rgba(176,136,24,0.08); }
+    html.light .match-row.winner { background: rgba(196,80,30,0.10); }
+
+    /* --- Theme toggle --- */
+    .theme-toggle {
+      position: fixed;
+      top: 16px;
+      right: 20px;
+      z-index: 100;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-2);
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: color .15s, border-color .15s;
+    }
+
+    .theme-toggle:hover {
+      color: var(--orange);
+      border-color: var(--orange);
+    }
+</style>
 </head>
 <body>
 
-<div class="header">
-  <h1>&#x26BD; 2026 FIFA World Cup Predictions</h1>
-  <p>Statistical model based on 10,000 Monte Carlo simulations</p>
-  <p>
+<header class="header">
+  <div class="eyebrow">
+    <span class="eyebrow-line"></span>
+    <span class="eyebrow-text">Monte Carlo Simulation &middot; 1,000 Iterations</span>
+    <span class="eyebrow-line"></span>
+  </div>
+  <h1>2026 FIFA World Cup Predictions</h1>
+  <p class="subtitle">Statistical model based on 1,000 Monte Carlo simulations</p>
+  <div class="badges">
     <span class="badge">Dixon-Coles Model</span>
     <span class="badge">30,000+ historical matches</span>
     <span class="badge">Time-decayed weighting</span>
     <span class="badge">All 48 teams</span>
-  </p>
-</div>
+  </div>
+</header>
+
+<button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">
+  <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+</button>
+<script>
+(function(){
+  var stored = localStorage.getItem('wc-theme');
+  var preferLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+  if (stored === 'light' || (!stored && preferLight)) {
+    document.documentElement.classList.add('light');
+    document.getElementById('icon-moon').style.display = 'none';
+    document.getElementById('icon-sun').style.display = '';
+  }
+})();
+function toggleTheme() {
+  var isLight = document.documentElement.classList.toggle('light');
+  localStorage.setItem('wc-theme', isLight ? 'light' : 'dark');
+  document.getElementById('icon-moon').style.display = isLight ? 'none' : '';
+  document.getElementById('icon-sun').style.display = isLight ? '' : 'none';
+}
+</script>
 
 <div class="container">
 
   <div class="champ-box">
-    <div class="label">Predicted Champion</div>
-    <div class="name">Argentina</div>
-    <div class="pct">30.9% win probability</div>
+    <span class="br"></span>
+    <div class="champ-label">Predicted Champion</div>
+    <div class="champ-name">Argentina</div>
+    <div class="champ-pct">47.4% win probability</div>
   </div>
 
-  <h2>Group Stage Predictions</h2>
-  <p class="section-note">Teams sorted by predicted finishing position. % = probability of qualifying (finishing 1st or 2nd).</p>
+  <div class="section-head">
+    <div class="section-eyebrow"><span class="line"></span><span class="label">Group Stage</span></div>
+    <h2>Group Stage Predictions</h2>
+  </div>
+  <p class="section-note">Teams sorted by knockout qualification probability. % = probability of reaching the Round of 32, including via one of the 8 best third-place spots.</p>
   <div class="groups-grid">
     
-          <div style="background:#1a1f3c;border-radius:10px;overflow:hidden;min-width:170px">
-            <div style="background:#c0392b;padding:8px 12px;font-weight:bold;font-size:13px;letter-spacing:1px">
-              GROUP A
-            </div>
-            <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <div class="group-card">
+            <div class="group-header">Group A</div>
+            <table class="group-table">
               
-              <tr style="background:rgba(255,215,0,0.15);font-weight:bold">
-                <td style="padding:4px 6px;color:#888">1</td>
-                <td style="padding:4px 8px">Mexico</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">100%</td>
+              <tr class="qual-1">
+                <td class="pos">1</td>
+                <td>Mexico</td>
+                <td class="pct">100%</td>
               </tr>
-              <tr style="background:rgba(200,200,200,0.1);font-weight:bold">
-                <td style="padding:4px 6px;color:#888">2</td>
-                <td style="padding:4px 8px">South Korea</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">80%</td>
+              <tr class="qual-2">
+                <td class="pos">2</td>
+                <td>South Africa</td>
+                <td class="pct">100%</td>
               </tr>
-              <tr style="color:#aaa">
-                <td style="padding:4px 6px;color:#888">3</td>
-                <td style="padding:4px 8px">Czechia</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">1%</td>
+              <tr class="qual-3">
+                <td class="pos">3</td>
+                <td>South Korea</td>
+                <td class="pct">97%</td>
               </tr>
-              <tr style="color:#aaa">
-                <td style="padding:4px 6px;color:#888">4</td>
-                <td style="padding:4px 8px">South Africa</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">18%</td>
+              <tr class="out">
+                <td class="pos">4</td>
+                <td>Czechia</td>
+                <td class="pct">0%</td>
               </tr>
             </table>
           </div>
 
-          <div style="background:#1a1f3c;border-radius:10px;overflow:hidden;min-width:170px">
-            <div style="background:#8e44ad;padding:8px 12px;font-weight:bold;font-size:13px;letter-spacing:1px">
-              GROUP B
-            </div>
-            <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <div class="group-card">
+            <div class="group-header">Group B</div>
+            <table class="group-table">
               
-              <tr style="background:rgba(255,215,0,0.15);font-weight:bold">
-                <td style="padding:4px 6px;color:#888">1</td>
-                <td style="padding:4px 8px">Canada</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">100%</td>
+              <tr class="qual-1">
+                <td class="pos">1</td>
+                <td>Switzerland</td>
+                <td class="pct">100%</td>
               </tr>
-              <tr style="background:rgba(200,200,200,0.1);font-weight:bold">
-                <td style="padding:4px 6px;color:#888">2</td>
-                <td style="padding:4px 8px">Switzerland</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">96%</td>
+              <tr class="qual-2">
+                <td class="pos">2</td>
+                <td>Canada</td>
+                <td class="pct">100%</td>
               </tr>
-              <tr style="color:#aaa">
-                <td style="padding:4px 6px;color:#888">3</td>
-                <td style="padding:4px 8px">Qatar</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">0%</td>
+              <tr class="qual-3">
+                <td class="pos">3</td>
+                <td>Bosnia-Herzegovina</td>
+                <td class="pct">100%</td>
               </tr>
-              <tr style="color:#aaa">
-                <td style="padding:4px 6px;color:#888">4</td>
-                <td style="padding:4px 8px">Bosnia-Herzegovina</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">4%</td>
+              <tr class="out">
+                <td class="pos">4</td>
+                <td>Qatar</td>
+                <td class="pct">0%</td>
               </tr>
             </table>
           </div>
 
-          <div style="background:#1a1f3c;border-radius:10px;overflow:hidden;min-width:170px">
-            <div style="background:#2980b9;padding:8px 12px;font-weight:bold;font-size:13px;letter-spacing:1px">
-              GROUP C
-            </div>
-            <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <div class="group-card">
+            <div class="group-header">Group C</div>
+            <table class="group-table">
               
-              <tr style="background:rgba(255,215,0,0.15);font-weight:bold">
-                <td style="padding:4px 6px;color:#888">1</td>
-                <td style="padding:4px 8px">Brazil</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">74%</td>
+              <tr class="qual-1">
+                <td class="pos">1</td>
+                <td>Morocco</td>
+                <td class="pct">100%</td>
               </tr>
-              <tr style="background:rgba(200,200,200,0.1);font-weight:bold">
-                <td style="padding:4px 6px;color:#888">2</td>
-                <td style="padding:4px 8px">Morocco</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">70%</td>
+              <tr class="qual-2">
+                <td class="pos">2</td>
+                <td>Brazil</td>
+                <td class="pct">100%</td>
               </tr>
-              <tr style="color:#aaa">
-                <td style="padding:4px 6px;color:#888">3</td>
-                <td style="padding:4px 8px">Scotland</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">52%</td>
+              <tr class="qual-3">
+                <td class="pos">3</td>
+                <td>Scotland</td>
+                <td class="pct">42%</td>
               </tr>
-              <tr style="color:#aaa">
-                <td style="padding:4px 6px;color:#888">4</td>
-                <td style="padding:4px 8px">Haiti</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">3%</td>
+              <tr class="out">
+                <td class="pos">4</td>
+                <td>Haiti</td>
+                <td class="pct">0%</td>
               </tr>
             </table>
           </div>
 
-          <div style="background:#1a1f3c;border-radius:10px;overflow:hidden;min-width:170px">
-            <div style="background:#27ae60;padding:8px 12px;font-weight:bold;font-size:13px;letter-spacing:1px">
-              GROUP D
-            </div>
-            <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <div class="group-card">
+            <div class="group-header">Group D</div>
+            <table class="group-table">
               
-              <tr style="background:rgba(255,215,0,0.15);font-weight:bold">
-                <td style="padding:4px 6px;color:#888">1</td>
-                <td style="padding:4px 8px">Australia</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">98%</td>
+              <tr class="qual-1">
+                <td class="pos">1</td>
+                <td>USA</td>
+                <td class="pct">100%</td>
               </tr>
-              <tr style="background:rgba(200,200,200,0.1);font-weight:bold">
-                <td style="padding:4px 6px;color:#888">2</td>
-                <td style="padding:4px 8px">USA</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">81%</td>
+              <tr class="qual-2">
+                <td class="pos">2</td>
+                <td>Australia</td>
+                <td class="pct">99%</td>
               </tr>
-              <tr style="color:#aaa">
-                <td style="padding:4px 6px;color:#888">3</td>
-                <td style="padding:4px 8px">Türkiye</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">19%</td>
+              <tr class="qual-3">
+                <td class="pos">3</td>
+                <td>Paraguay</td>
+                <td class="pct">74%</td>
               </tr>
-              <tr style="color:#aaa">
-                <td style="padding:4px 6px;color:#888">4</td>
-                <td style="padding:4px 8px">Paraguay</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">2%</td>
+              <tr class="out">
+                <td class="pos">4</td>
+                <td>Türkiye</td>
+                <td class="pct">2%</td>
               </tr>
             </table>
           </div>
 
-          <div style="background:#1a1f3c;border-radius:10px;overflow:hidden;min-width:170px">
-            <div style="background:#e67e22;padding:8px 12px;font-weight:bold;font-size:13px;letter-spacing:1px">
-              GROUP E
-            </div>
-            <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <div class="group-card">
+            <div class="group-header">Group E</div>
+            <table class="group-table">
               
-              <tr style="background:rgba(255,215,0,0.15);font-weight:bold">
-                <td style="padding:4px 6px;color:#888">1</td>
-                <td style="padding:4px 8px">Côte d'Ivoire</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">97%</td>
+              <tr class="qual-1">
+                <td class="pos">1</td>
+                <td>Germany</td>
+                <td class="pct">100%</td>
               </tr>
-              <tr style="background:rgba(200,200,200,0.1);font-weight:bold">
-                <td style="padding:4px 6px;color:#888">2</td>
-                <td style="padding:4px 8px">Germany</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">92%</td>
+              <tr class="qual-2">
+                <td class="pos">2</td>
+                <td>Côte d'Ivoire</td>
+                <td class="pct">100%</td>
               </tr>
-              <tr style="color:#aaa">
-                <td style="padding:4px 6px;color:#888">3</td>
-                <td style="padding:4px 8px">Ecuador</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">10%</td>
+              <tr class="qual-3">
+                <td class="pos">3</td>
+                <td>Ecuador</td>
+                <td class="pct">7%</td>
               </tr>
-              <tr style="color:#aaa">
-                <td style="padding:4px 6px;color:#888">4</td>
-                <td style="padding:4px 8px">Curaçao</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">1%</td>
+              <tr class="out">
+                <td class="pos">4</td>
+                <td>Curaçao</td>
+                <td class="pct">3%</td>
               </tr>
             </table>
           </div>
 
-          <div style="background:#1a1f3c;border-radius:10px;overflow:hidden;min-width:170px">
-            <div style="background:#16a085;padding:8px 12px;font-weight:bold;font-size:13px;letter-spacing:1px">
-              GROUP F
-            </div>
-            <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <div class="group-card">
+            <div class="group-header">Group F</div>
+            <table class="group-table">
               
-              <tr style="background:rgba(255,215,0,0.15);font-weight:bold">
-                <td style="padding:4px 6px;color:#888">1</td>
-                <td style="padding:4px 8px">Japan</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">80%</td>
+              <tr class="qual-1">
+                <td class="pos">1</td>
+                <td>Japan</td>
+                <td class="pct">100%</td>
               </tr>
-              <tr style="background:rgba(200,200,200,0.1);font-weight:bold">
-                <td style="padding:4px 6px;color:#888">2</td>
-                <td style="padding:4px 8px">Netherlands</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">75%</td>
+              <tr class="qual-2">
+                <td class="pos">2</td>
+                <td>Netherlands</td>
+                <td class="pct">100%</td>
               </tr>
-              <tr style="color:#aaa">
-                <td style="padding:4px 6px;color:#888">3</td>
-                <td style="padding:4px 8px">Sweden</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">44%</td>
+              <tr class="qual-3">
+                <td class="pos">3</td>
+                <td>Sweden</td>
+                <td class="pct">72%</td>
               </tr>
-              <tr style="color:#aaa">
-                <td style="padding:4px 6px;color:#888">4</td>
-                <td style="padding:4px 8px">Tunisia</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">0%</td>
+              <tr class="out">
+                <td class="pos">4</td>
+                <td>Tunisia</td>
+                <td class="pct">0%</td>
               </tr>
             </table>
           </div>
 
-          <div style="background:#1a1f3c;border-radius:10px;overflow:hidden;min-width:170px">
-            <div style="background:#d35400;padding:8px 12px;font-weight:bold;font-size:13px;letter-spacing:1px">
-              GROUP G
-            </div>
-            <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <div class="group-card">
+            <div class="group-header">Group G</div>
+            <table class="group-table">
               
-              <tr style="background:rgba(255,215,0,0.15);font-weight:bold">
-                <td style="padding:4px 6px;color:#888">1</td>
-                <td style="padding:4px 8px">Belgium</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">60%</td>
+              <tr class="qual-1">
+                <td class="pos">1</td>
+                <td>Egypt</td>
+                <td class="pct">100%</td>
               </tr>
-              <tr style="background:rgba(200,200,200,0.1);font-weight:bold">
-                <td style="padding:4px 6px;color:#888">2</td>
-                <td style="padding:4px 8px">Iran</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">49%</td>
+              <tr class="qual-2">
+                <td class="pos">2</td>
+                <td>Belgium</td>
+                <td class="pct">87%</td>
               </tr>
-              <tr style="color:#aaa">
-                <td style="padding:4px 6px;color:#888">3</td>
-                <td style="padding:4px 8px">New Zealand</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">46%</td>
+              <tr class="qual-3">
+                <td class="pos">3</td>
+                <td>Iran</td>
+                <td class="pct">69%</td>
               </tr>
-              <tr style="color:#aaa">
-                <td style="padding:4px 6px;color:#888">4</td>
-                <td style="padding:4px 8px">Egypt</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">46%</td>
+              <tr class="out">
+                <td class="pos">4</td>
+                <td>New Zealand</td>
+                <td class="pct">13%</td>
               </tr>
             </table>
           </div>
 
-          <div style="background:#1a1f3c;border-radius:10px;overflow:hidden;min-width:170px">
-            <div style="background:#2c3e50;padding:8px 12px;font-weight:bold;font-size:13px;letter-spacing:1px">
-              GROUP H
-            </div>
-            <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <div class="group-card">
+            <div class="group-header">Group H</div>
+            <table class="group-table">
               
-              <tr style="background:rgba(255,215,0,0.15);font-weight:bold">
-                <td style="padding:4px 6px;color:#888">1</td>
-                <td style="padding:4px 8px">Spain</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">85%</td>
+              <tr class="qual-1">
+                <td class="pos">1</td>
+                <td>Spain</td>
+                <td class="pct">100%</td>
               </tr>
-              <tr style="background:rgba(200,200,200,0.1);font-weight:bold">
-                <td style="padding:4px 6px;color:#888">2</td>
-                <td style="padding:4px 8px">Cape Verde</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">57%</td>
+              <tr class="qual-2">
+                <td class="pos">2</td>
+                <td>Cape Verde</td>
+                <td class="pct">88%</td>
               </tr>
-              <tr style="color:#aaa">
-                <td style="padding:4px 6px;color:#888">3</td>
-                <td style="padding:4px 8px">Uruguay</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">33%</td>
+              <tr class="qual-3">
+                <td class="pos">3</td>
+                <td>Uruguay</td>
+                <td class="pct">29%</td>
               </tr>
-              <tr style="color:#aaa">
-                <td style="padding:4px 6px;color:#888">4</td>
-                <td style="padding:4px 8px">Saudi Arabia</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">25%</td>
+              <tr class="out">
+                <td class="pos">4</td>
+                <td>Saudi Arabia</td>
+                <td class="pct">12%</td>
               </tr>
             </table>
           </div>
 
-          <div style="background:#1a1f3c;border-radius:10px;overflow:hidden;min-width:170px">
-            <div style="background:#7f8c8d;padding:8px 12px;font-weight:bold;font-size:13px;letter-spacing:1px">
-              GROUP I
-            </div>
-            <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <div class="group-card">
+            <div class="group-header">Group I</div>
+            <table class="group-table">
               
-              <tr style="background:rgba(255,215,0,0.15);font-weight:bold">
-                <td style="padding:4px 6px;color:#888">1</td>
-                <td style="padding:4px 8px">France</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">98%</td>
+              <tr class="qual-1">
+                <td class="pos">1</td>
+                <td>France</td>
+                <td class="pct">100%</td>
               </tr>
-              <tr style="background:rgba(200,200,200,0.1);font-weight:bold">
-                <td style="padding:4px 6px;color:#888">2</td>
-                <td style="padding:4px 8px">Norway</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">86%</td>
+              <tr class="qual-2">
+                <td class="pos">2</td>
+                <td>Norway</td>
+                <td class="pct">100%</td>
               </tr>
-              <tr style="color:#aaa">
-                <td style="padding:4px 6px;color:#888">3</td>
-                <td style="padding:4px 8px">Senegal</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">16%</td>
+              <tr class="qual-3">
+                <td class="pos">3</td>
+                <td>Senegal</td>
+                <td class="pct">76%</td>
               </tr>
-              <tr style="color:#aaa">
-                <td style="padding:4px 6px;color:#888">4</td>
-                <td style="padding:4px 8px">Iraq</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">0%</td>
+              <tr class="out">
+                <td class="pos">4</td>
+                <td>Iraq</td>
+                <td class="pct">2%</td>
               </tr>
             </table>
           </div>
 
-          <div style="background:#1a1f3c;border-radius:10px;overflow:hidden;min-width:170px">
-            <div style="background:#c0392b;padding:8px 12px;font-weight:bold;font-size:13px;letter-spacing:1px">
-              GROUP J
-            </div>
-            <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <div class="group-card">
+            <div class="group-header">Group J</div>
+            <table class="group-table">
               
-              <tr style="background:rgba(255,215,0,0.15);font-weight:bold">
-                <td style="padding:4px 6px;color:#888">1</td>
-                <td style="padding:4px 8px">Argentina</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">100%</td>
+              <tr class="qual-1">
+                <td class="pos">1</td>
+                <td>Argentina</td>
+                <td class="pct">100%</td>
               </tr>
-              <tr style="background:rgba(200,200,200,0.1);font-weight:bold">
-                <td style="padding:4px 6px;color:#888">2</td>
-                <td style="padding:4px 8px">Austria</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">84%</td>
+              <tr class="qual-2">
+                <td class="pos">2</td>
+                <td>Austria</td>
+                <td class="pct">98%</td>
               </tr>
-              <tr style="color:#aaa">
-                <td style="padding:4px 6px;color:#888">3</td>
-                <td style="padding:4px 8px">Algeria</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">16%</td>
+              <tr class="qual-3">
+                <td class="pos">3</td>
+                <td>Algeria</td>
+                <td class="pct">78%</td>
               </tr>
-              <tr style="color:#aaa">
-                <td style="padding:4px 6px;color:#888">4</td>
-                <td style="padding:4px 8px">Jordan</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">1%</td>
+              <tr class="out">
+                <td class="pos">4</td>
+                <td>Jordan</td>
+                <td class="pct">0%</td>
               </tr>
             </table>
           </div>
 
-          <div style="background:#1a1f3c;border-radius:10px;overflow:hidden;min-width:170px">
-            <div style="background:#8e44ad;padding:8px 12px;font-weight:bold;font-size:13px;letter-spacing:1px">
-              GROUP K
-            </div>
-            <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <div class="group-card">
+            <div class="group-header">Group K</div>
+            <table class="group-table">
               
-              <tr style="background:rgba(255,215,0,0.15);font-weight:bold">
-                <td style="padding:4px 6px;color:#888">1</td>
-                <td style="padding:4px 8px">Colombia</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">86%</td>
+              <tr class="qual-1">
+                <td class="pos">1</td>
+                <td>Portugal</td>
+                <td class="pct">100%</td>
               </tr>
-              <tr style="background:rgba(200,200,200,0.1);font-weight:bold">
-                <td style="padding:4px 6px;color:#888">2</td>
-                <td style="padding:4px 8px">Portugal</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">56%</td>
+              <tr class="qual-2">
+                <td class="pos">2</td>
+                <td>Colombia</td>
+                <td class="pct">100%</td>
               </tr>
-              <tr style="color:#aaa">
-                <td style="padding:4px 6px;color:#888">3</td>
-                <td style="padding:4px 8px">Congo DR</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">48%</td>
+              <tr class="qual-3">
+                <td class="pos">3</td>
+                <td>Congo DR</td>
+                <td class="pct">62%</td>
               </tr>
-              <tr style="color:#aaa">
-                <td style="padding:4px 6px;color:#888">4</td>
-                <td style="padding:4px 8px">Uzbekistan</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">9%</td>
+              <tr class="out">
+                <td class="pos">4</td>
+                <td>Uzbekistan</td>
+                <td class="pct">1%</td>
               </tr>
             </table>
           </div>
 
-          <div style="background:#1a1f3c;border-radius:10px;overflow:hidden;min-width:170px">
-            <div style="background:#2980b9;padding:8px 12px;font-weight:bold;font-size:13px;letter-spacing:1px">
-              GROUP L
-            </div>
-            <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <div class="group-card">
+            <div class="group-header">Group L</div>
+            <table class="group-table">
               
-              <tr style="background:rgba(255,215,0,0.15);font-weight:bold">
-                <td style="padding:4px 6px;color:#888">1</td>
-                <td style="padding:4px 8px">England</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">94%</td>
+              <tr class="qual-1">
+                <td class="pos">1</td>
+                <td>England</td>
+                <td class="pct">100%</td>
               </tr>
-              <tr style="background:rgba(200,200,200,0.1);font-weight:bold">
-                <td style="padding:4px 6px;color:#888">2</td>
-                <td style="padding:4px 8px">Ghana</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">80%</td>
+              <tr class="qual-2">
+                <td class="pos">2</td>
+                <td>Ghana</td>
+                <td class="pct">100%</td>
               </tr>
-              <tr style="color:#aaa">
-                <td style="padding:4px 6px;color:#888">3</td>
-                <td style="padding:4px 8px">Panama</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">11%</td>
+              <tr class="qual-3">
+                <td class="pos">3</td>
+                <td>Croatia</td>
+                <td class="pct">86%</td>
               </tr>
-              <tr style="color:#aaa">
-                <td style="padding:4px 6px;color:#888">4</td>
-                <td style="padding:4px 8px">Croatia</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">15%</td>
+              <tr class="out">
+                <td class="pos">4</td>
+                <td>Panama</td>
+                <td class="pct">3%</td>
               </tr>
             </table>
           </div>
   </div>
 
-  <h2>Knockout Bracket (Most Likely Progression)</h2>
-  <p class="section-note">Each match shows the two most likely teams to appear and their head-to-head win probabilities. Gold = predicted winner.</p>
-  
-      <div style="overflow-x:auto;padding:10px 0">
-        <div style="display:inline-flex;align-items:flex-start;gap:0">
-          
+  <div class="section-head">
+    <div class="section-eyebrow"><span class="line"></span><span class="label">Knockout Stage</span></div>
+    <h2>Knockout Bracket (Most Likely Progression)</h2>
+  </div>
+  <p class="section-note">Each match shows the two most likely teams and their head-to-head win probabilities. Highlighted = predicted winner.</p>
+  <div class="bracket-wrap">
+        <div class="bracket">
           <div>
-            <div style="text-align:center;font-size:11px;color:#888;margin-bottom:6px;white-space:nowrap">Round of 32</div>
-            <div style="display:flex;flex-direction:column;min-width:170px;padding:0 4px">
-              <div style="margin-bottom:0px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Mexico</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">63%</span>
+            <div class="bracket-col-label">Round of 32</div>
+            <div class="bracket-matches"><div style="margin-bottom:0px"><div class="match">
+        <div class="match-row winner"><span>Mexico</span><span class="match-pct">73%</span></div>
+        <div class="match-row"><span>Canada</span><span class="match-pct">27%</span></div>
+      </div></div><div style="margin-bottom:0px"><div class="match">
+        <div class="match-row winner"><span>Switzerland</span><span class="match-pct">74%</span></div>
+        <div class="match-row"><span>South Africa</span><span class="match-pct">26%</span></div>
+      </div></div><div style="margin-bottom:0px"><div class="match">
+        <div class="match-row winner"><span>Brazil</span><span class="match-pct">65%</span></div>
+        <div class="match-row"><span>Australia</span><span class="match-pct">35%</span></div>
+      </div></div><div style="margin-bottom:0px"><div class="match">
+        <div class="match-row winner"><span>USA</span><span class="match-pct">63%</span></div>
+        <div class="match-row"><span>Morocco</span><span class="match-pct">37%</span></div>
+      </div></div><div style="margin-bottom:0px"><div class="match">
+        <div class="match-row"><span>Germany</span><span class="match-pct">33%</span></div>
+        <div class="match-row winner"><span>Japan</span><span class="match-pct">67%</span></div>
+      </div></div><div style="margin-bottom:0px"><div class="match">
+        <div class="match-row winner"><span>Netherlands</span><span class="match-pct">74%</span></div>
+        <div class="match-row"><span>Côte d'Ivoire</span><span class="match-pct">26%</span></div>
+      </div></div><div style="margin-bottom:0px"><div class="match">
+        <div class="match-row winner"><span>Egypt</span><span class="match-pct">58%</span></div>
+        <div class="match-row"><span>Cape Verde</span><span class="match-pct">42%</span></div>
+      </div></div><div style="margin-bottom:0px"><div class="match">
+        <div class="match-row winner"><span>Spain</span><span class="match-pct">73%</span></div>
+        <div class="match-row"><span>Belgium</span><span class="match-pct">27%</span></div>
+      </div></div></div>
+          </div><div>
+            <div class="bracket-col-label">Round of 16</div>
+            <div class="bracket-matches"><div style="margin-bottom:8px"><div class="match">
+        <div class="match-row winner"><span>Mexico</span><span class="match-pct">70%</span></div>
+        <div class="match-row"><span>Switzerland</span><span class="match-pct">30%</span></div>
+      </div></div><div style="margin-bottom:8px"><div class="match">
+        <div class="match-row winner"><span>Brazil</span><span class="match-pct">56%</span></div>
+        <div class="match-row"><span>USA</span><span class="match-pct">44%</span></div>
+      </div></div><div style="margin-bottom:8px"><div class="match">
+        <div class="match-row winner"><span>Japan</span><span class="match-pct">52%</span></div>
+        <div class="match-row"><span>Netherlands</span><span class="match-pct">48%</span></div>
+      </div></div><div style="margin-bottom:8px"><div class="match">
+        <div class="match-row"><span>Egypt</span><span class="match-pct">27%</span></div>
+        <div class="match-row winner"><span>Spain</span><span class="match-pct">73%</span></div>
+      </div></div></div>
+          </div><div>
+            <div class="bracket-col-label">Quarter-Finals</div>
+            <div class="bracket-matches"><div style="margin-bottom:24px"><div class="match">
+        <div class="match-row winner"><span>Mexico</span><span class="match-pct">57%</span></div>
+        <div class="match-row"><span>Brazil</span><span class="match-pct">43%</span></div>
+      </div></div><div style="margin-bottom:24px"><div class="match">
+        <div class="match-row"><span>Japan</span><span class="match-pct">41%</span></div>
+        <div class="match-row winner"><span>Spain</span><span class="match-pct">59%</span></div>
+      </div></div></div>
+          </div><div>
+            <div class="bracket-col-label">Semi-Finals</div>
+            <div class="bracket-matches"><div style="margin-bottom:56px"><div class="match">
+        <div class="match-row"><span>Mexico</span><span class="match-pct">48%</span></div>
+        <div class="match-row winner"><span>Spain</span><span class="match-pct">52%</span></div>
+      </div></div></div>
           </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Switzerland</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">37%</span>
-          </div>
+          <div class="bracket-final">
+        <div class="final-label">Final</div>
+        <div class="match">
+        <div class="match-row"><span>Spain</span><span class="match-pct">37%</span></div>
+        <div class="match-row winner"><span>Argentina</span><span class="match-pct">63%</span></div>
       </div>
-              </div>
-              <div style="margin-bottom:0px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Canada</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">73%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">South Korea</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">27%</span>
-          </div>
-      </div>
-              </div>
-              <div style="margin-bottom:0px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Brazil</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">64%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">USA</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">36%</span>
-          </div>
-      </div>
-              </div>
-              <div style="margin-bottom:0px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Australia</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">58%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Morocco</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">42%</span>
-          </div>
-      </div>
-              </div>
-              <div style="margin-bottom:0px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Côte d'Ivoire</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">48%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Japan</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">52%</span>
-          </div>
-      </div>
-              </div>
-              <div style="margin-bottom:0px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Japan</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">52%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Côte d'Ivoire</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">48%</span>
-          </div>
-      </div>
-              </div>
-              <div style="margin-bottom:0px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Belgium</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">57%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Cape Verde</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">43%</span>
-          </div>
-      </div>
-              </div>
-              <div style="margin-bottom:0px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Spain</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">70%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Egypt</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">30%</span>
-          </div>
-      </div>
-              </div></div>
-          </div>
-          <div>
-            <div style="text-align:center;font-size:11px;color:#888;margin-bottom:6px;white-space:nowrap">Round of 16</div>
-            <div style="display:flex;flex-direction:column;min-width:170px;padding:0 4px">
-              <div style="margin-bottom:8px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Mexico</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">55%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Canada</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">45%</span>
-          </div>
-      </div>
-              </div>
-              <div style="margin-bottom:8px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Brazil</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">37%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Australia</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">63%</span>
-          </div>
-      </div>
-              </div>
-              <div style="margin-bottom:8px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Japan</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">50%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Japan</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">50%</span>
-          </div>
-      </div>
-              </div>
-              <div style="margin-bottom:8px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Belgium</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">27%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Spain</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">73%</span>
-          </div>
-      </div>
-              </div></div>
-          </div>
-          <div>
-            <div style="text-align:center;font-size:11px;color:#888;margin-bottom:6px;white-space:nowrap">Quarter-Finals</div>
-            <div style="display:flex;flex-direction:column;min-width:170px;padding:0 4px">
-              <div style="margin-bottom:24px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Mexico</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">48%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Australia</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">52%</span>
-          </div>
-      </div>
-              </div>
-              <div style="margin-bottom:24px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Japan</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">44%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Spain</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">56%</span>
-          </div>
-      </div>
-              </div></div>
-          </div>
-          <div>
-            <div style="text-align:center;font-size:11px;color:#888;margin-bottom:6px;white-space:nowrap">Semi-Finals</div>
-            <div style="display:flex;flex-direction:column;min-width:170px;padding:0 4px">
-              <div style="margin-bottom:56px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Australia</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">51%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Spain</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">49%</span>
-          </div>
-      </div>
-              </div></div>
-          </div>
-          
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:180px;padding:0 10px">
-        <div style="text-align:center;font-size:11px;color:#f39c12;margin-bottom:6px;font-weight:bold">FINAL</div>
-        
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Australia</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">38%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Argentina</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">62%</span>
-          </div>
-      </div>
-        <div style="margin-top:12px;text-align:center">
-          <div style="font-size:11px;color:#f39c12">PREDICTED CHAMPION</div>
-          <div style="font-size:16px;font-weight:bold;color:gold;margin-top:4px">Argentina</div>
-          <div style="font-size:11px;color:#888">30.9% win probability</div>
+        <div class="final-champ">
+          <div class="label">Predicted Champion</div>
+          <div class="name">Argentina</div>
+          <div class="pct">47.4% win probability</div>
         </div>
       </div>
-          
           <div>
-            <div style="text-align:center;font-size:11px;color:#888;margin-bottom:6px;white-space:nowrap">Round of 32</div>
-            <div style="display:flex;flex-direction:column;min-width:170px;padding:0 4px">
-              <div style="margin-bottom:0px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">France</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">65%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Austria</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">35%</span>
-          </div>
-      </div>
-              </div>
-              <div style="margin-bottom:0px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Argentina</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">76%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Norway</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">24%</span>
-          </div>
-      </div>
-              </div>
-              <div style="margin-bottom:0px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Colombia</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">66%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Ghana</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">34%</span>
-          </div>
-      </div>
-              </div>
-              <div style="margin-bottom:0px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">England</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">54%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Portugal</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">46%</span>
-          </div>
-      </div>
-              </div>
-              <div style="margin-bottom:0px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Bosnia-Herzegovina</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">41%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Ecuador</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">59%</span>
-          </div>
-      </div>
-              </div>
-              <div style="margin-bottom:0px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Senegal</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">59%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Algeria</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">41%</span>
-          </div>
-      </div>
-              </div>
-              <div style="margin-bottom:0px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Türkiye</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">37%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Sweden</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">63%</span>
-          </div>
-      </div>
-              </div>
-              <div style="margin-bottom:0px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Czechia</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">29%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Scotland</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">71%</span>
-          </div>
-      </div>
-              </div></div>
-          </div>
-          <div>
-            <div style="text-align:center;font-size:11px;color:#888;margin-bottom:6px;white-space:nowrap">Round of 16</div>
-            <div style="display:flex;flex-direction:column;min-width:170px;padding:0 4px">
-              <div style="margin-bottom:8px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">France</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">33%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Argentina</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">67%</span>
-          </div>
-      </div>
-              </div>
-              <div style="margin-bottom:8px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Colombia</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">56%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">England</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">44%</span>
-          </div>
-      </div>
-              </div>
-              <div style="margin-bottom:8px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Ecuador</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">46%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Senegal</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">54%</span>
-          </div>
-      </div>
-              </div>
-              <div style="margin-bottom:8px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Sweden</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">54%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Scotland</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">46%</span>
-          </div>
-      </div>
-              </div></div>
-          </div>
-          <div>
-            <div style="text-align:center;font-size:11px;color:#888;margin-bottom:6px;white-space:nowrap">Quarter-Finals</div>
-            <div style="display:flex;flex-direction:column;min-width:170px;padding:0 4px">
-              <div style="margin-bottom:24px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Argentina</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">81%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Colombia</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">19%</span>
-          </div>
-      </div>
-              </div>
-              <div style="margin-bottom:24px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Senegal</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">47%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Sweden</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">53%</span>
-          </div>
-      </div>
-              </div></div>
-          </div>
-          <div>
-            <div style="text-align:center;font-size:11px;color:#888;margin-bottom:6px;white-space:nowrap">Semi-Finals</div>
-            <div style="display:flex;flex-direction:column;min-width:170px;padding:0 4px">
-              <div style="margin-bottom:56px">
-                
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;background:rgba(255,215,0,0.25);font-weight:bold">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Argentina</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">89%</span>
-          </div>
-        <div style="height:1px;background:#334"></div>
-        
-          <div style="display:flex;align-items:center;padding:3px 6px;">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Sweden</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">11%</span>
-          </div>
-      </div>
-              </div></div>
+            <div class="bracket-col-label">Semi-Finals</div>
+            <div class="bracket-matches"><div style="margin-bottom:56px"><div class="match">
+        <div class="match-row winner"><span>Argentina</span><span class="match-pct">95%</span></div>
+        <div class="match-row"><span>Senegal</span><span class="match-pct">5%</span></div>
+      </div></div></div>
+          </div><div>
+            <div class="bracket-col-label">Quarter-Finals</div>
+            <div class="bracket-matches"><div style="margin-bottom:24px"><div class="match">
+        <div class="match-row winner"><span>Argentina</span><span class="match-pct">83%</span></div>
+        <div class="match-row"><span>Portugal</span><span class="match-pct">17%</span></div>
+      </div></div><div style="margin-bottom:24px"><div class="match">
+        <div class="match-row"><span>Sweden</span><span class="match-pct">38%</span></div>
+        <div class="match-row winner"><span>Senegal</span><span class="match-pct">62%</span></div>
+      </div></div></div>
+          </div><div>
+            <div class="bracket-col-label">Round of 16</div>
+            <div class="bracket-matches"><div style="margin-bottom:8px"><div class="match">
+        <div class="match-row"><span>France</span><span class="match-pct">25%</span></div>
+        <div class="match-row winner"><span>Argentina</span><span class="match-pct">75%</span></div>
+      </div></div><div style="margin-bottom:8px"><div class="match">
+        <div class="match-row"><span>Colombia</span><span class="match-pct">38%</span></div>
+        <div class="match-row winner"><span>Portugal</span><span class="match-pct">62%</span></div>
+      </div></div><div style="margin-bottom:8px"><div class="match">
+        <div class="match-row"><span>Bosnia-Herzegovina</span><span class="match-pct">28%</span></div>
+        <div class="match-row winner"><span>Sweden</span><span class="match-pct">72%</span></div>
+      </div></div><div style="margin-bottom:8px"><div class="match">
+        <div class="match-row winner"><span>Senegal</span><span class="match-pct">53%</span></div>
+        <div class="match-row"><span>Congo DR</span><span class="match-pct">47%</span></div>
+      </div></div></div>
+          </div><div>
+            <div class="bracket-col-label">Round of 32</div>
+            <div class="bracket-matches"><div style="margin-bottom:0px"><div class="match">
+        <div class="match-row winner"><span>France</span><span class="match-pct">75%</span></div>
+        <div class="match-row"><span>Austria</span><span class="match-pct">25%</span></div>
+      </div></div><div style="margin-bottom:0px"><div class="match">
+        <div class="match-row winner"><span>Argentina</span><span class="match-pct">90%</span></div>
+        <div class="match-row"><span>Norway</span><span class="match-pct">10%</span></div>
+      </div></div><div style="margin-bottom:0px"><div class="match">
+        <div class="match-row winner"><span>Colombia</span><span class="match-pct">56%</span></div>
+        <div class="match-row"><span>Ghana</span><span class="match-pct">44%</span></div>
+      </div></div><div style="margin-bottom:0px"><div class="match">
+        <div class="match-row"><span>England</span><span class="match-pct">37%</span></div>
+        <div class="match-row winner"><span>Portugal</span><span class="match-pct">63%</span></div>
+      </div></div><div style="margin-bottom:0px"><div class="match">
+        <div class="match-row"><span>South Korea</span><span class="match-pct">49%</span></div>
+        <div class="match-row winner"><span>Bosnia-Herzegovina</span><span class="match-pct">51%</span></div>
+      </div></div><div style="margin-bottom:0px"><div class="match">
+        <div class="match-row"><span>Scotland</span><span class="match-pct">27%</span></div>
+        <div class="match-row winner"><span>Sweden</span><span class="match-pct">73%</span></div>
+      </div></div><div style="margin-bottom:0px"><div class="match">
+        <div class="match-row winner"><span>Senegal</span><span class="match-pct">66%</span></div>
+        <div class="match-row"><span>Ecuador</span><span class="match-pct">34%</span></div>
+      </div></div><div style="margin-bottom:0px"><div class="match">
+        <div class="match-row winner"><span>Congo DR</span><span class="match-pct">59%</span></div>
+        <div class="match-row"><span>Uruguay</span><span class="match-pct">41%</span></div>
+      </div></div></div>
           </div>
         </div>
       </div>
 
-  <h2>Championship Probability (Top 24)</h2>
-  <p class="section-note">Probability of winning the tournament across all 10,000 simulations.</p>
-  <div style="margin-top:12px">
-    
-          <div style="display:flex;align-items:center;margin:3px 0">
-            <div style="min-width:145px;font-size:13px;text-align:right;padding-right:10px;color:#ddd">
-              Argentina
-            </div>
-            <div style="width:300px;height:18px;background:#e67e22;border-radius:3px;transition:width 0.3s"></div>
-            <div style="margin-left:8px;font-size:12px;color:#aaa">30.9%</div>
-          </div>
-          <div style="display:flex;align-items:center;margin:3px 0">
-            <div style="min-width:145px;font-size:13px;text-align:right;padding-right:10px;color:#ddd">
-              Spain
-            </div>
-            <div style="width:93px;height:18px;background:#e74c3c;border-radius:3px;transition:width 0.3s"></div>
-            <div style="margin-left:8px;font-size:12px;color:#aaa">9.6%</div>
-          </div>
-          <div style="display:flex;align-items:center;margin:3px 0">
-            <div style="min-width:145px;font-size:13px;text-align:right;padding-right:10px;color:#ddd">
-              Australia
-            </div>
-            <div style="width:88px;height:18px;background:#e74c3c;border-radius:3px;transition:width 0.3s"></div>
-            <div style="margin-left:8px;font-size:12px;color:#aaa">9.1%</div>
-          </div>
-          <div style="display:flex;align-items:center;margin:3px 0">
-            <div style="min-width:145px;font-size:13px;text-align:right;padding-right:10px;color:#ddd">
-              France
-            </div>
-            <div style="width:61px;height:18px;background:#e74c3c;border-radius:3px;transition:width 0.3s"></div>
-            <div style="margin-left:8px;font-size:12px;color:#aaa">6.3%</div>
-          </div>
-          <div style="display:flex;align-items:center;margin:3px 0">
-            <div style="min-width:145px;font-size:13px;text-align:right;padding-right:10px;color:#ddd">
-              Mexico
-            </div>
-            <div style="width:57px;height:18px;background:#e74c3c;border-radius:3px;transition:width 0.3s"></div>
-            <div style="margin-left:8px;font-size:12px;color:#aaa">5.9%</div>
-          </div>
-          <div style="display:flex;align-items:center;margin:3px 0">
-            <div style="min-width:145px;font-size:13px;text-align:right;padding-right:10px;color:#ddd">
-              Japan
-            </div>
-            <div style="width:43px;height:18px;background:#e74c3c;border-radius:3px;transition:width 0.3s"></div>
-            <div style="margin-left:8px;font-size:12px;color:#aaa">4.5%</div>
-          </div>
-          <div style="display:flex;align-items:center;margin:3px 0">
-            <div style="min-width:145px;font-size:13px;text-align:right;padding-right:10px;color:#ddd">
-              Canada
-            </div>
-            <div style="width:36px;height:18px;background:#e74c3c;border-radius:3px;transition:width 0.3s"></div>
-            <div style="margin-left:8px;font-size:12px;color:#aaa">3.8%</div>
-          </div>
-          <div style="display:flex;align-items:center;margin:3px 0">
-            <div style="min-width:145px;font-size:13px;text-align:right;padding-right:10px;color:#ddd">
-              Côte d'Ivoire
-            </div>
-            <div style="width:34px;height:18px;background:#e74c3c;border-radius:3px;transition:width 0.3s"></div>
-            <div style="margin-left:8px;font-size:12px;color:#aaa">3.5%</div>
-          </div>
-          <div style="display:flex;align-items:center;margin:3px 0">
-            <div style="min-width:145px;font-size:13px;text-align:right;padding-right:10px;color:#ddd">
-              Morocco
-            </div>
-            <div style="width:31px;height:18px;background:#e74c3c;border-radius:3px;transition:width 0.3s"></div>
-            <div style="margin-left:8px;font-size:12px;color:#aaa">3.2%</div>
-          </div>
-          <div style="display:flex;align-items:center;margin:3px 0">
-            <div style="min-width:145px;font-size:13px;text-align:right;padding-right:10px;color:#ddd">
-              Germany
-            </div>
-            <div style="width:29px;height:18px;background:#e74c3c;border-radius:3px;transition:width 0.3s"></div>
-            <div style="margin-left:8px;font-size:12px;color:#aaa">3.0%</div>
-          </div>
-          <div style="display:flex;align-items:center;margin:3px 0">
-            <div style="min-width:145px;font-size:13px;text-align:right;padding-right:10px;color:#ddd">
-              Colombia
-            </div>
-            <div style="width:28px;height:18px;background:#e74c3c;border-radius:3px;transition:width 0.3s"></div>
-            <div style="margin-left:8px;font-size:12px;color:#aaa">2.9%</div>
-          </div>
-          <div style="display:flex;align-items:center;margin:3px 0">
-            <div style="min-width:145px;font-size:13px;text-align:right;padding-right:10px;color:#ddd">
-              Netherlands
-            </div>
-            <div style="width:25px;height:18px;background:#e74c3c;border-radius:3px;transition:width 0.3s"></div>
-            <div style="margin-left:8px;font-size:12px;color:#aaa">2.6%</div>
-          </div>
-          <div style="display:flex;align-items:center;margin:3px 0">
-            <div style="min-width:145px;font-size:13px;text-align:right;padding-right:10px;color:#ddd">
-              Norway
-            </div>
-            <div style="width:24px;height:18px;background:#e74c3c;border-radius:3px;transition:width 0.3s"></div>
-            <div style="margin-left:8px;font-size:12px;color:#aaa">2.5%</div>
-          </div>
-          <div style="display:flex;align-items:center;margin:3px 0">
-            <div style="min-width:145px;font-size:13px;text-align:right;padding-right:10px;color:#ddd">
-              Brazil
-            </div>
-            <div style="width:23px;height:18px;background:#e74c3c;border-radius:3px;transition:width 0.3s"></div>
-            <div style="margin-left:8px;font-size:12px;color:#aaa">2.4%</div>
-          </div>
-          <div style="display:flex;align-items:center;margin:3px 0">
-            <div style="min-width:145px;font-size:13px;text-align:right;padding-right:10px;color:#ddd">
-              England
-            </div>
-            <div style="width:12px;height:18px;background:#e74c3c;border-radius:3px;transition:width 0.3s"></div>
-            <div style="margin-left:8px;font-size:12px;color:#aaa">1.3%</div>
-          </div>
-          <div style="display:flex;align-items:center;margin:3px 0">
-            <div style="min-width:145px;font-size:13px;text-align:right;padding-right:10px;color:#ddd">
-              Austria
-            </div>
-            <div style="width:11px;height:18px;background:#e74c3c;border-radius:3px;transition:width 0.3s"></div>
-            <div style="margin-left:8px;font-size:12px;color:#aaa">1.1%</div>
-          </div>
-          <div style="display:flex;align-items:center;margin:3px 0">
-            <div style="min-width:145px;font-size:13px;text-align:right;padding-right:10px;color:#ddd">
-              Switzerland
-            </div>
-            <div style="width:9px;height:18px;background:#e74c3c;border-radius:3px;transition:width 0.3s"></div>
-            <div style="margin-left:8px;font-size:12px;color:#aaa">0.9%</div>
-          </div>
-          <div style="display:flex;align-items:center;margin:3px 0">
-            <div style="min-width:145px;font-size:13px;text-align:right;padding-right:10px;color:#ddd">
-              Congo DR
-            </div>
-            <div style="width:8px;height:18px;background:#e74c3c;border-radius:3px;transition:width 0.3s"></div>
-            <div style="margin-left:8px;font-size:12px;color:#aaa">0.9%</div>
-          </div>
-          <div style="display:flex;align-items:center;margin:3px 0">
-            <div style="min-width:145px;font-size:13px;text-align:right;padding-right:10px;color:#ddd">
-              Portugal
-            </div>
-            <div style="width:8px;height:18px;background:#e74c3c;border-radius:3px;transition:width 0.3s"></div>
-            <div style="margin-left:8px;font-size:12px;color:#aaa">0.9%</div>
-          </div>
-          <div style="display:flex;align-items:center;margin:3px 0">
-            <div style="min-width:145px;font-size:13px;text-align:right;padding-right:10px;color:#ddd">
-              Ecuador
-            </div>
-            <div style="width:6px;height:18px;background:#e74c3c;border-radius:3px;transition:width 0.3s"></div>
-            <div style="margin-left:8px;font-size:12px;color:#aaa">0.7%</div>
-          </div>
-          <div style="display:flex;align-items:center;margin:3px 0">
-            <div style="min-width:145px;font-size:13px;text-align:right;padding-right:10px;color:#ddd">
-              Sweden
-            </div>
-            <div style="width:5px;height:18px;background:#e74c3c;border-radius:3px;transition:width 0.3s"></div>
-            <div style="margin-left:8px;font-size:12px;color:#aaa">0.5%</div>
-          </div>
-          <div style="display:flex;align-items:center;margin:3px 0">
-            <div style="min-width:145px;font-size:13px;text-align:right;padding-right:10px;color:#ddd">
-              Scotland
-            </div>
-            <div style="width:4px;height:18px;background:#e74c3c;border-radius:3px;transition:width 0.3s"></div>
-            <div style="margin-left:8px;font-size:12px;color:#aaa">0.5%</div>
-          </div>
-          <div style="display:flex;align-items:center;margin:3px 0">
-            <div style="min-width:145px;font-size:13px;text-align:right;padding-right:10px;color:#ddd">
-              USA
-            </div>
-            <div style="width:4px;height:18px;background:#e74c3c;border-radius:3px;transition:width 0.3s"></div>
-            <div style="margin-left:8px;font-size:12px;color:#aaa">0.4%</div>
-          </div>
-          <div style="display:flex;align-items:center;margin:3px 0">
-            <div style="min-width:145px;font-size:13px;text-align:right;padding-right:10px;color:#ddd">
-              Belgium
-            </div>
-            <div style="width:3px;height:18px;background:#e74c3c;border-radius:3px;transition:width 0.3s"></div>
-            <div style="margin-left:8px;font-size:12px;color:#aaa">0.4%</div>
+  <div class="section-head">
+    <div class="section-eyebrow"><span class="line"></span><span class="label">Tournament Odds</span></div>
+    <h2>Championship Probability (Top 24)</h2>
+  </div>
+  <p class="section-note">Probability of winning the tournament across all 1,000 simulations.</p>
+  <div class="prob-list">
+    <div class="prob-row">
+            <div class="prob-name">Argentina</div>
+            <div class="prob-track"><div class="prob-fill" style="width:300px"></div></div>
+            <div class="prob-pct">47.4%</div>
+          </div><div class="prob-row">
+            <div class="prob-name">Spain</div>
+            <div class="prob-track"><div class="prob-fill" style="width:87px"></div></div>
+            <div class="prob-pct">13.9%</div>
+          </div><div class="prob-row">
+            <div class="prob-name">Mexico</div>
+            <div class="prob-track"><div class="prob-fill" style="width:69px"></div></div>
+            <div class="prob-pct">11.0%</div>
+          </div><div class="prob-row">
+            <div class="prob-name">France</div>
+            <div class="prob-track"><div class="prob-fill" style="width:32px"></div></div>
+            <div class="prob-pct">5.2%</div>
+          </div><div class="prob-row">
+            <div class="prob-name">Japan</div>
+            <div class="prob-track"><div class="prob-fill" style="width:25px"></div></div>
+            <div class="prob-pct">4.0%</div>
+          </div><div class="prob-row">
+            <div class="prob-name">Brazil</div>
+            <div class="prob-track"><div class="prob-fill" style="width:24px"></div></div>
+            <div class="prob-pct">3.9%</div>
+          </div><div class="prob-row">
+            <div class="prob-name">Netherlands</div>
+            <div class="prob-track"><div class="prob-fill" style="width:22px"></div></div>
+            <div class="prob-pct">3.5%</div>
+          </div><div class="prob-row">
+            <div class="prob-name">Portugal</div>
+            <div class="prob-track"><div class="prob-fill" style="width:16px"></div></div>
+            <div class="prob-pct">2.6%</div>
+          </div><div class="prob-row">
+            <div class="prob-name">USA</div>
+            <div class="prob-track"><div class="prob-fill" style="width:13px"></div></div>
+            <div class="prob-pct">2.2%</div>
+          </div><div class="prob-row">
+            <div class="prob-name">Congo DR</div>
+            <div class="prob-track"><div class="prob-fill" style="width:5px"></div></div>
+            <div class="prob-pct">0.9%</div>
+          </div><div class="prob-row">
+            <div class="prob-name">Colombia</div>
+            <div class="prob-track"><div class="prob-fill" style="width:4px"></div></div>
+            <div class="prob-pct">0.7%</div>
+          </div><div class="prob-row">
+            <div class="prob-name">Ghana</div>
+            <div class="prob-track"><div class="prob-fill" style="width:3px"></div></div>
+            <div class="prob-pct">0.6%</div>
+          </div><div class="prob-row">
+            <div class="prob-name">Egypt</div>
+            <div class="prob-track"><div class="prob-fill" style="width:3px"></div></div>
+            <div class="prob-pct">0.5%</div>
+          </div><div class="prob-row">
+            <div class="prob-name">Senegal</div>
+            <div class="prob-track"><div class="prob-fill" style="width:3px"></div></div>
+            <div class="prob-pct">0.5%</div>
+          </div><div class="prob-row">
+            <div class="prob-name">Switzerland</div>
+            <div class="prob-track"><div class="prob-fill" style="width:2px"></div></div>
+            <div class="prob-pct">0.4%</div>
+          </div><div class="prob-row">
+            <div class="prob-name">Iran</div>
+            <div class="prob-track"><div class="prob-fill" style="width:2px"></div></div>
+            <div class="prob-pct">0.4%</div>
+          </div><div class="prob-row">
+            <div class="prob-name">Norway</div>
+            <div class="prob-track"><div class="prob-fill" style="width:2px"></div></div>
+            <div class="prob-pct">0.4%</div>
+          </div><div class="prob-row">
+            <div class="prob-name">Australia</div>
+            <div class="prob-track"><div class="prob-fill" style="width:1px"></div></div>
+            <div class="prob-pct">0.3%</div>
+          </div><div class="prob-row">
+            <div class="prob-name">Germany</div>
+            <div class="prob-track"><div class="prob-fill" style="width:1px"></div></div>
+            <div class="prob-pct">0.3%</div>
+          </div><div class="prob-row">
+            <div class="prob-name">Côte d'Ivoire</div>
+            <div class="prob-track"><div class="prob-fill" style="width:1px"></div></div>
+            <div class="prob-pct">0.3%</div>
+          </div><div class="prob-row">
+            <div class="prob-name">Algeria</div>
+            <div class="prob-track"><div class="prob-fill" style="width:1px"></div></div>
+            <div class="prob-pct">0.3%</div>
+          </div><div class="prob-row">
+            <div class="prob-name">Morocco</div>
+            <div class="prob-track"><div class="prob-fill" style="width:1px"></div></div>
+            <div class="prob-pct">0.2%</div>
+          </div><div class="prob-row">
+            <div class="prob-name">England</div>
+            <div class="prob-track"><div class="prob-fill" style="width:1px"></div></div>
+            <div class="prob-pct">0.2%</div>
+          </div><div class="prob-row">
+            <div class="prob-name">Canada</div>
+            <div class="prob-track"><div class="prob-fill" style="width:0px"></div></div>
+            <div class="prob-pct">0.1%</div>
           </div>
   </div>
 

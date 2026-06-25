@@ -29,10 +29,11 @@ def _win_pct(model, home: str, away: str) -> float:
     return probs["home_win"] + 0.5 * probs["draw"]
 
 
-def _predicted_standings(group_letter: str, group_outcomes: dict, n_sims: int) -> list[dict]:
+def _predicted_standings(group_letter: str, group_outcomes: dict, n_sims: int, stats: dict) -> list[dict]:
     """
-    Return teams sorted by predicted finish position (most-likely 1st first).
-    Each entry: {team, p1, p2, p3, p4}
+    Return teams sorted by knockout qualification probability (highest first).
+    p_qualify = 1 - P(eliminated in group stage), which includes the best-third pathway.
+    Each entry: {team, p1, p2, p3, p4, p_qualify}
     """
     rows = []
     for team, counts in group_outcomes[group_letter].items():
@@ -42,8 +43,9 @@ def _predicted_standings(group_letter: str, group_outcomes: dict, n_sims: int) -
             "p2": counts[2] / n_sims,
             "p3": counts[3] / n_sims,
             "p4": counts[4] / n_sims,
+            "p_qualify": 1.0 - stats[team]["groups"] / n_sims,
         })
-    rows.sort(key=lambda x: x["p1"], reverse=True)
+    rows.sort(key=lambda x: x["p_qualify"], reverse=True)
     return rows
 
 
@@ -113,7 +115,6 @@ def _simulate_bracket(model, r32: list[dict]) -> list[list[dict]]:
             m1 = current[i]
             m2 = current[i + 1] if i + 1 < len(current) else None
 
-            # Get the two teams competing in this match
             if isinstance(m1, dict) and "winner" in m1:
                 t1 = m1["winner"]
             elif isinstance(m1, dict) and "t1" in m1:
@@ -142,7 +143,6 @@ def _simulate_bracket(model, r32: list[dict]) -> list[list[dict]]:
             round_matches.append(m1)
             round_matches.append(m2)
 
-            # Next match for the next round
             p_next = _win_pct(model, t1, t2)
             next_teams.append({"t1": t1, "t2": t2, "p1": p_next, "p2": 1 - p_next,
                                 "winner": t1 if p_next >= 0.5 else t2,
@@ -157,58 +157,40 @@ def _simulate_bracket(model, r32: list[dict]) -> list[list[dict]]:
     return rounds
 
 
-def _color_for_pct(pct: float) -> str:
-    """Green → amber → red gradient based on win probability."""
-    if pct >= 0.60: return "#27ae60"
-    if pct >= 0.45: return "#2ecc71"
-    if pct >= 0.35: return "#f39c12"
-    if pct >= 0.25: return "#e67e22"
-    return "#e74c3c"
-
-
 # ---------------------------------------------------------------------------
 # HTML generation helpers
 # ---------------------------------------------------------------------------
 
-def _groups_html(groups: dict, group_outcomes: dict, n_sims: int) -> str:
+def _groups_html(groups: dict, group_outcomes: dict, n_sims: int, stats: dict) -> str:
     cards = []
-    group_colors = {
-        "A": "#c0392b", "B": "#8e44ad", "C": "#2980b9",
-        "D": "#27ae60", "E": "#e67e22", "F": "#16a085",
-        "G": "#d35400", "H": "#2c3e50", "I": "#7f8c8d",
-        "J": "#c0392b", "K": "#8e44ad", "L": "#2980b9",
-    }
 
     for letter, _teams in groups.items():
-        standings = _predicted_standings(letter, group_outcomes, n_sims)
-        color = group_colors.get(letter, "#333")
+        standings = _predicted_standings(letter, group_outcomes, n_sims, stats)
 
         rows_html = ""
         for rank, s in enumerate(standings, start=1):
-            p1 = s["p1"] * 100
-            p2 = s["p2"] * 100
-            q_pct = p1 + p2  # qualify %
+            q_pct = s["p_qualify"] * 100
 
             if rank == 1:
-                row_style = "background:rgba(255,215,0,0.15);font-weight:bold"
+                row_cls = "qual-1"
             elif rank == 2:
-                row_style = "background:rgba(200,200,200,0.1);font-weight:bold"
+                row_cls = "qual-2"
+            elif rank == 3:
+                row_cls = "qual-3"
             else:
-                row_style = "color:#aaa"
+                row_cls = "out"
 
             rows_html += f"""
-              <tr style="{row_style}">
-                <td style="padding:4px 6px;color:#888">{rank}</td>
-                <td style="padding:4px 8px">{_dn(s['team'])}</td>
-                <td style="padding:4px 6px;text-align:right;color:#aaa">{q_pct:.0f}%</td>
+              <tr class="{row_cls}">
+                <td class="pos">{rank}</td>
+                <td>{_dn(s['team'])}</td>
+                <td class="pct">{q_pct:.0f}%</td>
               </tr>"""
 
         cards.append(f"""
-          <div style="background:#1a1f3c;border-radius:10px;overflow:hidden;min-width:170px">
-            <div style="background:{color};padding:8px 12px;font-weight:bold;font-size:13px;letter-spacing:1px">
-              GROUP {letter}
-            </div>
-            <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <div class="group-card">
+            <div class="group-header">Group {letter}</div>
+            <table class="group-table">
               {rows_html}
             </table>
           </div>""")
@@ -216,7 +198,7 @@ def _groups_html(groups: dict, group_outcomes: dict, n_sims: int) -> str:
     return "\n".join(cards)
 
 
-def _match_html(m: dict, is_winner: bool = False) -> str:
+def _match_html(m: dict) -> str:
     """Render a single knockout match cell."""
     if not isinstance(m, dict) or "t1" not in m:
         return '<div style="height:52px"></div>'
@@ -227,18 +209,11 @@ def _match_html(m: dict, is_winner: bool = False) -> str:
     winner = m.get("winner", "")
 
     def team_row(name, prob, is_w):
-        bg = "background:rgba(255,215,0,0.25);font-weight:bold" if is_w else ""
-        bar_w = int(prob * 50)
-        return f"""
-          <div style="display:flex;align-items:center;padding:3px 6px;{bg}">
-            <span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{name}</span>
-            <span style="font-size:10px;color:#aaa;margin-left:4px;min-width:30px;text-align:right">{prob*100:.0f}%</span>
-          </div>"""
+        cls = "match-row winner" if is_w else "match-row"
+        return f"""<div class="{cls}"><span>{name}</span><span class="match-pct">{prob*100:.0f}%</span></div>"""
 
-    return f"""
-      <div style="border:1px solid #334;border-radius:6px;overflow:hidden;margin:2px 0;background:#111827">
+    return f"""<div class="match">
         {team_row(t1, p1, winner == m['t1'])}
-        <div style="height:1px;background:#334"></div>
         {team_row(t2, p2, winner == m.get('t2', ''))}
       </div>"""
 
@@ -246,7 +221,6 @@ def _match_html(m: dict, is_winner: bool = False) -> str:
 def _bracket_html(model, r32: list[dict], stats: dict, n_sims: int) -> str:
     """Build the full bracket HTML from R32 through Final."""
 
-    # ---------- compute the bracket rounds ----------
     def get_team(m):
         return m["winner"] if isinstance(m, dict) and "winner" in m else m
 
@@ -262,24 +236,8 @@ def _bracket_html(model, r32: list[dict], stats: dict, n_sims: int) -> str:
         r32_resolved.append({**m, "p1": p, "p2": 1 - p,
                               "winner": m["t1"] if p >= 0.5 else m["t2"]})
 
-    rounds = [r32_resolved]
-    current = r32_resolved
-    round_names = ["Round of 32", "Round of 16", "Quarter-Finals",
-                   "Semi-Finals", "Final"]
-
-    for name in round_names[1:]:
-        winners = [get_team(m) for m in current]
-        next_round = [make_match(winners[i], winners[i + 1])
-                      for i in range(0, len(winners), 2)]
-        rounds.append(next_round)
-        current = next_round
-        if len(next_round) == 1:
-            break
-
-    # ---------- split into left / right halves ----------
-    # Left: first 8 R32 matches (Groups A-F)
-    # Right: next 8 R32 matches (Groups G-L + thirds)
-    half = len(r32_resolved) // 2   # = 8
+    # Split into left/right halves
+    half = len(r32_resolved) // 2  # = 8
 
     left_r32  = r32_resolved[:half]
     right_r32 = r32_resolved[half:]
@@ -298,61 +256,49 @@ def _bracket_html(model, r32: list[dict], stats: dict, n_sims: int) -> str:
     left_rounds  = advance_half(left_r32)
     right_rounds = advance_half(right_r32)
 
-    # The final
-    l_sf_winner = get_team(left_rounds[-1][0])
-    r_sf_winner = get_team(right_rounds[-1][0])
-    final_match = make_match(l_sf_winner, r_sf_winner)
+    final_match = make_match(get_team(left_rounds[-1][0]), get_team(right_rounds[-1][0]))
 
-    # ---------- render HTML ----------
     col_labels_left  = ["Round of 32", "Round of 16", "Quarter-Finals", "Semi-Finals"]
     col_labels_right = col_labels_left[::-1]
 
-    MAX_ROUNDS = max(len(left_rounds), len(right_rounds))
-
-    def round_col(round_matches, round_idx, total_r32):
-        """One round column, with spacing to vertically center matches."""
-        n = len(round_matches)
-        spacer = (2 ** round_idx - 1) * 8   # px between matches
+    def round_col(round_matches, round_idx):
+        spacer = (2 ** round_idx - 1) * 8
         items = ""
         for m in round_matches:
-            items += f"""
-              <div style="margin-bottom:{spacer}px">
-                {_match_html(m)}
-              </div>"""
-        return f"""<div style="display:flex;flex-direction:column;min-width:170px;padding:0 4px">{items}</div>"""
+            items += f'<div style="margin-bottom:{spacer}px">{_match_html(m)}</div>'
+        return f'<div class="bracket-matches">{items}</div>'
 
     left_cols = ""
     for i, rd in enumerate(left_rounds):
         label = col_labels_left[i] if i < len(col_labels_left) else ""
-        left_cols += f"""
-          <div>
-            <div style="text-align:center;font-size:11px;color:#888;margin-bottom:6px;white-space:nowrap">{label}</div>
-            {round_col(rd, i, half)}
+        left_cols += f"""<div>
+            <div class="bracket-col-label">{label}</div>
+            {round_col(rd, i)}
           </div>"""
 
     right_cols = ""
     for i, rd in enumerate(reversed(right_rounds)):
         label = col_labels_right[i] if i < len(col_labels_right) else ""
-        right_cols = f"""
-          <div>
-            <div style="text-align:center;font-size:11px;color:#888;margin-bottom:6px;white-space:nowrap">{label}</div>
-            {round_col(rd, len(right_rounds) - 1 - i, half)}
-          </div>""" + right_cols
+        right_cols += f"""<div>
+            <div class="bracket-col-label">{label}</div>
+            {round_col(rd, len(right_rounds) - 1 - i)}
+          </div>"""
 
-    final_col = f"""
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:180px;padding:0 10px">
-        <div style="text-align:center;font-size:11px;color:#f39c12;margin-bottom:6px;font-weight:bold">FINAL</div>
+    champ_name = _dn(final_match['winner'])
+    champ_pct  = stats[final_match['winner']]['champion'] / n_sims * 100
+
+    final_col = f"""<div class="bracket-final">
+        <div class="final-label">Final</div>
         {_match_html(final_match)}
-        <div style="margin-top:12px;text-align:center">
-          <div style="font-size:11px;color:#f39c12">PREDICTED CHAMPION</div>
-          <div style="font-size:16px;font-weight:bold;color:gold;margin-top:4px">{_dn(final_match['winner'])}</div>
-          <div style="font-size:11px;color:#888">{stats[final_match['winner']]['champion']/n_sims*100:.1f}% win probability</div>
+        <div class="final-champ">
+          <div class="label">Predicted Champion</div>
+          <div class="name">{champ_name}</div>
+          <div class="pct">{champ_pct:.1f}% win probability</div>
         </div>
       </div>"""
 
-    return f"""
-      <div style="overflow-x:auto;padding:10px 0">
-        <div style="display:inline-flex;align-items:flex-start;gap:0">
+    return f"""<div class="bracket-wrap">
+        <div class="bracket">
           {left_cols}
           {final_col}
           {right_cols}
@@ -368,14 +314,10 @@ def _prob_bars_html(stats: dict, n_sims: int, top_n: int = 24) -> str:
     for team, s in items:
         pct = s["champion"] / n_sims
         bar_w = int(pct / max(max_pct, 0.001) * 300)
-        color = _color_for_pct(pct)
-        rows += f"""
-          <div style="display:flex;align-items:center;margin:3px 0">
-            <div style="min-width:145px;font-size:13px;text-align:right;padding-right:10px;color:#ddd">
-              {_dn(team)}
-            </div>
-            <div style="width:{bar_w}px;height:18px;background:{color};border-radius:3px;transition:width 0.3s"></div>
-            <div style="margin-left:8px;font-size:12px;color:#aaa">{pct*100:.1f}%</div>
+        rows += f"""<div class="prob-row">
+            <div class="prob-name">{_dn(team)}</div>
+            <div class="prob-track"><div class="prob-fill" style="width:{bar_w}px"></div></div>
+            <div class="prob-pct">{pct*100:.1f}%</div>
           </div>"""
     return rows
 
@@ -384,13 +326,425 @@ def _prob_bars_html(stats: dict, n_sims: int, top_n: int = 24) -> str:
 # Main entry point
 # ---------------------------------------------------------------------------
 
+_CSS = """
+    /* === Design system: warm charcoal dark mode === */
+    :root {
+      --bg:        #1C1A15;
+      --surface:   #2A2620;
+      --surface-2: #332E26;
+      --border:    #3E3830;
+      --border-em: #4E4840;
+      --text:      #E8DFC8;
+      --text-2:    #9A9080;
+      --text-3:    #5E5848;
+      --orange:    #D46030;
+      --teal:      #2E9A8C;
+      --mustard:   #C8A022;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+    }
+
+    /* Drafting-table grid overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(232,223,200,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(232,223,200,0.04) 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+
+    /* --- Layout --- */
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* --- Header --- */
+    .header {
+      text-align: center;
+      padding: 52px 24px 40px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      z-index: 1;
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .eyebrow-line { width: 24px; height: 1.5px; background: var(--orange); flex-shrink: 0; }
+
+    .eyebrow-text {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--orange);
+    }
+
+    .header h1 {
+      font-size: 34px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      line-height: 1.1;
+    }
+
+    .header .subtitle {
+      margin-top: 10px;
+      font-size: 14px;
+      color: var(--text-2);
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .badge {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 5px 14px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-2);
+    }
+
+    /* --- Section headings --- */
+    .section-head { margin-top: 48px; }
+
+    .section-eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .section-eyebrow .line { width: 20px; height: 1.5px; background: var(--orange); flex-shrink: 0; }
+
+    .section-eyebrow .label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--orange);
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text);
+    }
+
+    .section-note {
+      margin-top: 6px;
+      margin-bottom: 20px;
+      font-size: 12px;
+      color: var(--text-2);
+    }
+
+    /* --- Champion box --- */
+    .champ-box {
+      text-align: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 28px 24px;
+      margin: 28px auto;
+      max-width: 300px;
+      position: relative;
+    }
+
+    .champ-box::before { content: ''; position: absolute; top: 0; left: 0; width: 28px; height: 3px; background: var(--mustard); }
+    .champ-box::after  { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 28px; background: var(--mustard); }
+    .champ-box .br { position: absolute; bottom: 0; right: 0; width: 28px; height: 28px; }
+    .champ-box .br::before { content: ''; position: absolute; bottom: 0; right: 0; width: 28px; height: 3px; background: var(--mustard); }
+    .champ-box .br::after  { content: ''; position: absolute; bottom: 0; right: 0; width: 3px; height: 28px; background: var(--mustard); }
+
+    .champ-box .champ-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-2);
+    }
+
+    .champ-box .champ-name {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--mustard);
+      margin: 10px 0 6px;
+    }
+
+    .champ-box .champ-pct { font-size: 13px; color: var(--text-2); }
+
+    /* --- Groups grid --- */
+    .groups-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    @media (max-width: 1200px) { .groups-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 700px)  { .groups-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    .group-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .group-card::before { content: ''; position: absolute; top: 0; left: 0; width: 20px; height: 2px; background: var(--orange); z-index: 1; }
+    .group-card::after  { content: ''; position: absolute; top: 0; left: 0; width: 2px; height: 20px; background: var(--orange); z-index: 1; }
+
+    .group-header {
+      padding: 9px 12px 9px 16px;
+      background: var(--surface-2);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-2);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .group-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .group-table tr { border-bottom: 1px solid var(--border); }
+    .group-table tr:last-child { border-bottom: none; }
+    .group-table td { padding: 5px 8px; }
+    .group-table td.pos { color: var(--text-3); width: 18px; padding-right: 4px; font-size: 11px; }
+    .group-table td.pct { text-align: right; font-size: 12px; }
+
+    .group-table tr.qual-1 { background: rgba(212,96,48,0.12); }
+    .group-table tr.qual-1 td { color: var(--text); font-weight: 600; }
+    .group-table tr.qual-1 td.pct { color: var(--orange); }
+
+    .group-table tr.qual-2 { background: rgba(46,154,140,0.10); }
+    .group-table tr.qual-2 td { color: var(--text); font-weight: 600; }
+    .group-table tr.qual-2 td.pct { color: var(--teal); }
+
+    .group-table tr.qual-3 { background: rgba(200,160,34,0.07); }
+    .group-table tr.qual-3 td { color: var(--text-2); }
+    .group-table tr.qual-3 td.pct { color: var(--mustard); }
+
+    .group-table tr.out td { color: var(--text-2); }
+    .group-table tr.out td.pct { color: var(--text-3); }
+
+    /* --- Knockout bracket --- */
+    .bracket-wrap { overflow-x: auto; padding: 12px 0; }
+    .bracket { display: inline-flex; align-items: flex-start; gap: 0; }
+
+    .bracket-col-label {
+      text-align: center;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: 8px;
+      white-space: nowrap;
+      padding: 0 4px;
+    }
+
+    .bracket-matches {
+      display: flex;
+      flex-direction: column;
+      min-width: 170px;
+      padding: 0 4px;
+    }
+
+    .match {
+      border: 1px solid var(--border);
+      overflow: hidden;
+      margin: 2px 0;
+      background: var(--surface);
+    }
+
+    .match-row {
+      display: flex;
+      align-items: center;
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+
+    .match-row + .match-row { border-top: 1px solid var(--border); }
+
+    .match-row.winner {
+      background: rgba(212,96,48,0.15);
+      font-weight: 700;
+    }
+
+    .match-row span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .match-pct {
+      font-size: 10px;
+      color: var(--text-2);
+      margin-left: 6px;
+      min-width: 28px;
+      text-align: right;
+    }
+
+    .match-row.winner .match-pct { color: var(--orange); }
+
+    /* Final column */
+    .bracket-final {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 180px;
+      padding: 0 12px;
+    }
+
+    .final-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--mustard);
+      margin-bottom: 8px;
+    }
+
+    .final-champ { margin-top: 16px; text-align: center; }
+    .final-champ .label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--mustard);
+    }
+    .final-champ .name {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--mustard);
+      letter-spacing: -0.01em;
+      margin-top: 6px;
+    }
+    .final-champ .pct { font-size: 11px; color: var(--text-2); margin-top: 4px; }
+
+    /* --- Probability bars --- */
+    .prob-list { margin-top: 16px; }
+
+    .prob-row {
+      display: flex;
+      align-items: center;
+      margin: 5px 0;
+    }
+
+    .prob-name {
+      min-width: 145px;
+      font-size: 13px;
+      text-align: right;
+      padding-right: 14px;
+      color: var(--text);
+    }
+
+    .prob-track {
+      height: 3px;
+      background: var(--border);
+      position: relative;
+      flex: 1;
+      max-width: 320px;
+    }
+
+    .prob-fill { height: 100%; background: var(--orange); }
+
+    .prob-pct {
+      margin-left: 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-2);
+      min-width: 38px;
+    }
+
+    /* --- Light mode overrides --- */
+    html.light {
+      --bg:        #F5F0E4;
+      --surface:   #FDFAF3;
+      --surface-2: #F0EAD8;
+      --border:    #C8BEA8;
+      --border-em: #A89E8A;
+      --text:      #1E1E1E;
+      --text-2:    #6B6458;
+      --text-3:    #9A9080;
+      --orange:    #C4501E;
+      --teal:      #1A7A6E;
+      --mustard:   #B08818;
+    }
+
+    html.light body::before {
+      background-image:
+        linear-gradient(rgba(30,30,30,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(30,30,30,0.04) 1px, transparent 1px);
+    }
+
+    html.light .group-table tr.qual-1 { background: rgba(196,80,30,0.10); }
+    html.light .group-table tr.qual-2 { background: rgba(26,122,110,0.08); }
+    html.light .group-table tr.qual-3 { background: rgba(176,136,24,0.08); }
+    html.light .match-row.winner { background: rgba(196,80,30,0.10); }
+
+    /* --- Theme toggle --- */
+    .theme-toggle {
+      position: fixed;
+      top: 16px;
+      right: 20px;
+      z-index: 100;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-2);
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: color .15s, border-color .15s;
+    }
+
+    .theme-toggle:hover {
+      color: var(--orange);
+      border-color: var(--orange);
+    }
+"""
+
+
 def generate_html(model, stats: dict, group_outcomes: dict,
                   groups: dict, n_sims: int, output_path: Path) -> None:
     """Write a self-contained HTML wall chart to output_path."""
 
     r32 = _build_r32(group_outcomes, n_sims, groups)
 
-    groups_html   = _groups_html(groups, group_outcomes, n_sims)
+    groups_html   = _groups_html(groups, group_outcomes, n_sims, stats)
     bracket_html  = _bracket_html(model, r32, stats, n_sims)
     prob_bars     = _prob_bars_html(stats, n_sims)
 
@@ -404,87 +758,81 @@ def generate_html(model, stats: dict, group_outcomes: dict,
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>2026 FIFA World Cup — Predictions</title>
-  <style>
-    *, *::before, *::after {{ box-sizing: border-box; }}
-    body {{
-      margin: 0; padding: 0;
-      background: #0d1117;
-      color: #e6edf3;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }}
-    h2 {{
-      font-size: 16px; font-weight: 600; color: #58a6ff;
-      border-bottom: 1px solid #30363d; padding-bottom: 8px; margin-top: 32px;
-      text-transform: uppercase; letter-spacing: 1px;
-    }}
-    .container {{ max-width: 1600px; margin: 0 auto; padding: 20px 24px; }}
-    .header {{
-      text-align: center; padding: 32px 20px 24px;
-      background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
-      border-bottom: 1px solid #30363d;
-    }}
-    .header h1 {{ margin: 0; font-size: 28px; color: #f0f6fc; }}
-    .header p  {{ margin: 8px 0 0; color: #8b949e; font-size: 14px; }}
-    .badge {{
-      display: inline-block; background: #21262d; border: 1px solid #30363d;
-      border-radius: 20px; padding: 4px 14px; font-size: 12px; color: #8b949e; margin: 4px;
-    }}
-    .champ-box {{
-      text-align:center; background: linear-gradient(135deg, #21262d, #161b22);
-      border: 1px solid #f39c12; border-radius: 12px;
-      padding: 20px; margin: 16px auto; max-width: 320px;
-    }}
-    .champ-box .label {{ font-size: 12px; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; }}
-    .champ-box .name  {{ font-size: 26px; font-weight: bold; color: gold; margin: 6px 0; }}
-    .champ-box .pct   {{ font-size: 13px; color: #8b949e; }}
-    .groups-grid {{
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 12px; margin-top: 16px;
-    }}
-    @media (max-width: 1200px) {{
-      .groups-grid {{ grid-template-columns: repeat(3, 1fr); }}
-    }}
-    @media (max-width: 700px) {{
-      .groups-grid {{ grid-template-columns: repeat(2, 1fr); }}
-    }}
-    .section-note {{ font-size: 12px; color: #8b949e; margin-bottom: 12px; }}
-  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>{_CSS}</style>
 </head>
 <body>
 
-<div class="header">
-  <h1>&#x26BD; 2026 FIFA World Cup Predictions</h1>
-  <p>Statistical model based on {n_sims:,} Monte Carlo simulations</p>
-  <p>
+<header class="header">
+  <div class="eyebrow">
+    <span class="eyebrow-line"></span>
+    <span class="eyebrow-text">Monte Carlo Simulation &middot; {n_sims:,} Iterations</span>
+    <span class="eyebrow-line"></span>
+  </div>
+  <h1>2026 FIFA World Cup Predictions</h1>
+  <p class="subtitle">Statistical model based on {n_sims:,} Monte Carlo simulations</p>
+  <div class="badges">
     <span class="badge">Dixon-Coles Model</span>
     <span class="badge">30,000+ historical matches</span>
     <span class="badge">Time-decayed weighting</span>
     <span class="badge">All 48 teams</span>
-  </p>
-</div>
+  </div>
+</header>
+
+<button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">
+  <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+</button>
+<script>
+(function(){{
+  var stored = localStorage.getItem('wc-theme');
+  var preferLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+  if (stored === 'light' || (!stored && preferLight)) {{
+    document.documentElement.classList.add('light');
+    document.getElementById('icon-moon').style.display = 'none';
+    document.getElementById('icon-sun').style.display = '';
+  }}
+}})();
+function toggleTheme() {{
+  var isLight = document.documentElement.classList.toggle('light');
+  localStorage.setItem('wc-theme', isLight ? 'light' : 'dark');
+  document.getElementById('icon-moon').style.display = isLight ? 'none' : '';
+  document.getElementById('icon-sun').style.display = isLight ? '' : 'none';
+}}
+</script>
 
 <div class="container">
 
   <div class="champ-box">
-    <div class="label">Predicted Champion</div>
-    <div class="name">{predicted_champ}</div>
-    <div class="pct">{champ_pct:.1f}% win probability</div>
+    <span class="br"></span>
+    <div class="champ-label">Predicted Champion</div>
+    <div class="champ-name">{predicted_champ}</div>
+    <div class="champ-pct">{champ_pct:.1f}% win probability</div>
   </div>
 
-  <h2>Group Stage Predictions</h2>
-  <p class="section-note">Teams sorted by predicted finishing position. % = probability of qualifying (finishing 1st or 2nd).</p>
+  <div class="section-head">
+    <div class="section-eyebrow"><span class="line"></span><span class="label">Group Stage</span></div>
+    <h2>Group Stage Predictions</h2>
+  </div>
+  <p class="section-note">Teams sorted by knockout qualification probability. % = probability of reaching the Round of 32, including via one of the 8 best third-place spots.</p>
   <div class="groups-grid">
     {groups_html}
   </div>
 
-  <h2>Knockout Bracket (Most Likely Progression)</h2>
-  <p class="section-note">Each match shows the two most likely teams to appear and their head-to-head win probabilities. Gold = predicted winner.</p>
+  <div class="section-head">
+    <div class="section-eyebrow"><span class="line"></span><span class="label">Knockout Stage</span></div>
+    <h2>Knockout Bracket (Most Likely Progression)</h2>
+  </div>
+  <p class="section-note">Each match shows the two most likely teams and their head-to-head win probabilities. Highlighted = predicted winner.</p>
   {bracket_html}
 
-  <h2>Championship Probability (Top 24)</h2>
+  <div class="section-head">
+    <div class="section-eyebrow"><span class="line"></span><span class="label">Tournament Odds</span></div>
+    <h2>Championship Probability (Top 24)</h2>
+  </div>
   <p class="section-note">Probability of winning the tournament across all {n_sims:,} simulations.</p>
-  <div style="margin-top:12px">
+  <div class="prob-list">
     {prob_bars}
   </div>
 
