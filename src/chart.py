@@ -29,6 +29,24 @@ def _win_pct(model, home: str, away: str) -> float:
     return probs["home_win"] + 0.5 * probs["draw"]
 
 
+def _mc_champion_prob(team: str, round_idx: int, stats: dict, n_sims: int) -> float:
+    """
+    P(team becomes champion | team reached round_idx), from Monte Carlo counts.
+    Using this (rather than the conditional round-advance rate) ensures the bracket
+    always propagates toward the overall tournament winner.
+    round_idx: 0=R32, 1=R16, 2=QF, 3=SF, 4=Final
+    """
+    s = stats[team]
+    reach_r32   = n_sims     - s['groups']
+    reach_r16   = reach_r32  - s['r32']
+    reach_qf    = reach_r16  - s['r16']
+    reach_sf    = reach_qf   - s['quarter']
+    reach_final = reach_sf   - s['semi']
+    denominators = [reach_r32, reach_r16, reach_qf, reach_sf, reach_final]
+    den = denominators[round_idx]
+    return s['champion'] / den if den > 0 else 0.0
+
+
 def _predicted_standings(group_letter: str, group_outcomes: dict, n_sims: int, stats: dict) -> list[dict]:
     """
     Return teams sorted by knockout qualification probability (highest first).
@@ -60,41 +78,51 @@ def _most_likely_team(group_letter: str, rank: int,
     return best
 
 
-def _build_r32(group_outcomes: dict, n_sims: int, groups: dict) -> list[dict]:
+def _build_r32(group_outcomes: dict, n_sims: int, groups: dict,
+               actual_state: dict = None) -> list[dict]:
     """
     Build the 16 R32 matchup dicts in bracket order.
+    Uses actual group standings when all groups are complete; falls back to
+    simulation-based most-likely-team approximation otherwise.
     Returns [{"t1": str, "t2": str, "label": str}, …]
-    Left half: groups A–F (indices 0–5)  → 12 matches (6 pairs)
-    Right half: groups G–L (indices 6–11) → 12 matches (6 pairs)
-    Third-place slots: appended to end (4 matches, deterministic approximation)
     """
+    if actual_state is not None:
+        from .tournament_state import compute_round_fixtures
+        actual = compute_round_fixtures("r32", actual_state, groups)
+        if actual is not None:
+            return actual
+
+    # Simulation-based fallback: use the official FIFA R32 bracket structure
+    from .fixtures import R32_BRACKET
+    from .tournament_state import _solve_third_place
+
     letters = list(groups.keys())
-    matches = []
 
-    for i in range(0, len(letters), 2):
-        g1, g2 = letters[i], letters[i + 1]
-        t1 = _most_likely_team(g1, 1, group_outcomes, n_sims)
-        t2 = _most_likely_team(g2, 2, group_outcomes, n_sims)
-        t3 = _most_likely_team(g2, 1, group_outcomes, n_sims)
-        t4 = _most_likely_team(g1, 2, group_outcomes, n_sims)
-        matches.append({"t1": t1, "t2": t2, "label": f"1{g1} v 2{g2}"})
-        matches.append({"t1": t3, "t2": t4, "label": f"1{g2} v 2{g1}"})
-
-    # Best 8 thirds (approximate: pick the 8 most likely 3rd-place teams)
+    # Approximate which 8 groups most often have a qualifying 3rd-place team
     third_pool = []
     for letter in letters:
         best = _most_likely_team(letter, 3, group_outcomes, n_sims)
         p = group_outcomes[letter][best][3] / n_sims
-        third_pool.append((best, p, letter))
-    third_pool.sort(key=lambda x: x[1], reverse=True)
-    thirds = [t[0] for t in third_pool[:8]]
+        third_pool.append((letter, best, p))
+    third_pool.sort(key=lambda x: x[2], reverse=True)
+    qualified_letters = [l for l, _, _ in third_pool[:8]]
+    most_likely_3rd = {l: t for l, t, _ in third_pool}
 
-    for i in range(0, 8, 2):
-        matches.append({
-            "t1": thirds[i],
-            "t2": thirds[i + 1],
-            "label": "Best 3rd",
-        })
+    third_assignment = _solve_third_place(R32_BRACKET, qualified_letters)
+
+    matches = []
+    for i, (p1, p2) in enumerate(R32_BRACKET):
+        rank1 = int(p1[0])
+        t1 = _most_likely_team(p1[1], rank1, group_outcomes, n_sims)
+        if p2.startswith("3"):
+            g = third_assignment[i]
+            t2 = most_likely_3rd[g]
+            label = f"{p1} v 3{g}"
+        else:
+            rank2 = int(p2[0])
+            t2 = _most_likely_team(p2[1], rank2, group_outcomes, n_sims)
+            label = f"{p1} v {p2}"
+        matches.append({"t1": t1, "t2": t2, "label": label})
 
     return matches  # 16 matches total
 
@@ -224,17 +252,24 @@ def _bracket_html(model, r32: list[dict], stats: dict, n_sims: int) -> str:
     def get_team(m):
         return m["winner"] if isinstance(m, dict) and "winner" in m else m
 
-    def make_match(t1, t2, label=""):
-        p = _win_pct(model, t1, t2)
-        return {"t1": t1, "t2": t2, "p1": p, "p2": 1 - p,
-                "winner": t1 if p >= 0.5 else t2, "label": label}
+    def make_match(t1, t2, round_idx, label=""):
+        if round_idx == 4:
+            # Final: compare raw champion counts so the bracket winner always
+            # equals the MC leader shown in the hero box.
+            p1_adv = stats[t1]["champion"]
+            p2_adv = stats[t2]["champion"]
+        else:
+            p1_adv = _mc_champion_prob(t1, round_idx, stats, n_sims)
+            p2_adv = _mc_champion_prob(t2, round_idx, stats, n_sims)
+        total = p1_adv + p2_adv
+        p1 = p1_adv / total if total > 0 else 0.5
+        return {"t1": t1, "t2": t2, "p1": p1, "p2": 1 - p1,
+                "winner": t1 if p1 >= 0.5 else t2, "label": label}
 
-    # Process R32
+    # Process R32 (round_idx=0)
     r32_resolved = []
     for m in r32:
-        p = _win_pct(model, m["t1"], m["t2"])
-        r32_resolved.append({**m, "p1": p, "p2": 1 - p,
-                              "winner": m["t1"] if p >= 0.5 else m["t2"]})
+        r32_resolved.append(make_match(m["t1"], m["t2"], 0, m.get("label", "")))
 
     # Split into left/right halves
     half = len(r32_resolved) // 2  # = 8
@@ -245,18 +280,20 @@ def _bracket_html(model, r32: list[dict], stats: dict, n_sims: int) -> str:
     def advance_half(half_r32):
         rounds_h = [half_r32]
         cur = half_r32
+        round_idx = 1  # first advance from R32 produces R16 matchups
         while len(cur) > 1:
             winners = [get_team(m) for m in cur]
-            nxt = [make_match(winners[i], winners[i + 1])
+            nxt = [make_match(winners[i], winners[i + 1], round_idx)
                    for i in range(0, len(winners), 2)]
             rounds_h.append(nxt)
             cur = nxt
+            round_idx += 1
         return rounds_h
 
     left_rounds  = advance_half(left_r32)
     right_rounds = advance_half(right_r32)
 
-    final_match = make_match(get_team(left_rounds[-1][0]), get_team(right_rounds[-1][0]))
+    final_match = make_match(get_team(left_rounds[-1][0]), get_team(right_rounds[-1][0]), 4)
 
     col_labels_left  = ["Round of 32", "Round of 16", "Quarter-Finals", "Semi-Finals"]
     col_labels_right = col_labels_left[::-1]
@@ -739,10 +776,11 @@ _CSS = """
 
 
 def generate_html(model, stats: dict, group_outcomes: dict,
-                  groups: dict, n_sims: int, output_path: Path) -> None:
+                  groups: dict, n_sims: int, output_path: Path,
+                  actual_state: dict = None) -> None:
     """Write a self-contained HTML wall chart to output_path."""
 
-    r32 = _build_r32(group_outcomes, n_sims, groups)
+    r32 = _build_r32(group_outcomes, n_sims, groups, actual_state)
 
     groups_html   = _groups_html(groups, group_outcomes, n_sims, stats)
     bracket_html  = _bracket_html(model, r32, stats, n_sims)
@@ -824,7 +862,7 @@ function toggleTheme() {{
     <div class="section-eyebrow"><span class="line"></span><span class="label">Knockout Stage</span></div>
     <h2>Knockout Bracket (Most Likely Progression)</h2>
   </div>
-  <p class="section-note">Each match shows the two most likely teams and their head-to-head win probabilities. Highlighted = predicted winner.</p>
+  <p class="section-note">Each match shows the two most likely teams. Percentage = probability of winning the tournament from this point (given the team reached this round). Highlighted = predicted winner.</p>
   {bracket_html}
 
   <div class="section-head">

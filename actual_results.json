@@ -100,6 +100,18 @@
         "away": "Paraguay",
         "home_score": 0,
         "away_score": 1
+      },
+      {
+        "home": "United States",
+        "away": "Turkey",
+        "home_score": 2,
+        "away_score": 3
+      },
+      {
+        "home": "Australia",
+        "away": "Paraguay",
+        "home_score": 0,
+        "away_score": 0
       }
     ],
     "C": [
@@ -164,6 +176,18 @@
         "away": "Cura\u00e7ao",
         "home_score": 0,
         "away_score": 0
+      },
+      {
+        "home": "Ivory Coast",
+        "away": "Cura\u00e7ao",
+        "home_score": 2,
+        "away_score": 0
+      },
+      {
+        "home": "Germany",
+        "away": "Ecuador",
+        "home_score": 1,
+        "away_score": 2
       }
     ],
     "F": [
@@ -190,6 +214,18 @@
         "away": "Tunisia",
         "home_score": 4,
         "away_score": 0
+      },
+      {
+        "home": "Sweden",
+        "away": "Japan",
+        "home_score": 1,
+        "away_score": 1
+      },
+      {
+        "home": "Netherlands",
+        "away": "Tunisia",
+        "home_score": 3,
+        "away_score": 1
       }
     ],
     "H": [
@@ -216,6 +252,18 @@
         "away": "Cape Verde",
         "home_score": 2,
         "away_score": 2
+      },
+      {
+        "home": "Saudi Arabia",
+        "away": "Cape Verde",
+        "home_score": 0,
+        "away_score": 0
+      },
+      {
+        "home": "Uruguay",
+        "away": "Spain",
+        "home_score": 0,
+        "away_score": 1
       }
     ],
     "G": [
@@ -242,6 +290,18 @@
         "away": "Egypt",
         "home_score": 1,
         "away_score": 3
+      },
+      {
+        "home": "Iran",
+        "away": "Egypt",
+        "home_score": 1,
+        "away_score": 1
+      },
+      {
+        "home": "New Zealand",
+        "away": "Belgium",
+        "home_score": 1,
+        "away_score": 5
       }
     ],
     "I": [
@@ -268,6 +328,18 @@
         "away": "Norway",
         "home_score": 2,
         "away_score": 3
+      },
+      {
+        "home": "France",
+        "away": "Norway",
+        "home_score": 4,
+        "away_score": 1
+      },
+      {
+        "home": "Senegal",
+        "away": "Iraq",
+        "home_score": 5,
+        "away_score": 0
       }
     ],
     "J": [
@@ -293,6 +365,18 @@
         "home": "Algeria",
         "away": "Jordan",
         "home_score": 2,
+        "away_score": 1
+      },
+      {
+        "home": "Algeria",
+        "away": "Austria",
+        "home_score": 3,
+        "away_score": 3
+      },
+      {
+        "home": "Argentina",
+        "away": "Jordan",
+        "home_score": 3,
         "away_score": 1
       }
     ],
@@ -320,6 +404,18 @@
         "away": "Colombia",
         "home_score": 0,
         "away_score": 1
+      },
+      {
+        "home": "Portugal",
+        "away": "Colombia",
+        "home_score": 0,
+        "away_score": 0
+      },
+      {
+        "home": "DR Congo",
+        "away": "Uzbekistan",
+        "home_score": 3,
+        "away_score": 1
       }
     ],
     "L": [
@@ -346,8 +442,51 @@
         "away": "Panama",
         "home_score": 1,
         "away_score": 0
+      },
+      {
+        "home": "Croatia",
+        "away": "Ghana",
+        "home_score": 2,
+        "away_score": 1
+      },
+      {
+        "home": "England",
+        "away": "Panama",
+        "home_score": 2,
+        "away_score": 0
       }
     ]
   },
-  "knockout_results": {}
+  "knockout_results": {
+    "r32": [
+      {
+        "team1": "South Africa",
+        "team2": "Canada",
+        "team1_score": 0,
+        "team2_score": 1,
+        "winner": "Canada"
+      },
+      {
+        "team1": "Netherlands",
+        "team2": "Morocco",
+        "team1_score": 1,
+        "team2_score": 1,
+        "winner": "Morocco"
+      },
+      {
+        "team1": "Brazil",
+        "team2": "Japan",
+        "team1_score": 2,
+        "team2_score": 1,
+        "winner": "Brazil"
+      },
+      {
+        "team1": "Germany",
+        "team2": "Paraguay",
+        "team1_score": 1,
+        "team2_score": 1,
+        "winner": "Paraguay"
+      }
+    ]
+  }
 }

@@ -229,48 +229,32 @@ def simulate_tournament(model, n_sims: int = 10_000,
 def _single_sim(model, groups: dict, stats: dict, group_outcomes: dict,
                 actual_state: dict, rng: np.random.Generator) -> None:
     """Run one full tournament simulation, updating stats and group_outcomes in-place."""
-    from .tournament_state import group_played_matches, knockout_winner
+    from .tournament_state import group_played_matches, knockout_winner, build_r32_from_standings
 
     group_letters = list(groups.keys())
-
-    winners_by_group: dict[str, str]  = {}
-    runners_by_group: dict[str, str]  = {}
-    thirds: List[dict] = []
+    all_standings: dict[str, list[dict]] = {}
 
     # --- Group stage ---
     for letter, teams in groups.items():
         actual_matches = group_played_matches(letter, actual_state)
         standings, _ = _group_standings(teams, model, rng, actual_matches)
+        all_standings[letter] = standings
         for rank, s in enumerate(standings, start=1):
             group_outcomes[letter][s["team"]][rank] += 1
-        winners_by_group[letter] = standings[0]["team"]
-        runners_by_group[letter] = standings[1]["team"]
-        third = {**standings[2], "group": letter}
-        thirds.append(third)
-        # 4th place → eliminated in groups
-        stats[standings[3]["team"]]["groups"] += 1
+        stats[standings[3]["team"]]["groups"] += 1  # 4th place → out
 
-    # --- Best 8 third-place teams ---
-    thirds.sort(key=lambda x: (x["pts"], x["gd"], x["gf"]), reverse=True)
-    best_thirds = [t["team"] for t in thirds[:8]]
-    for t in thirds[8:]:
-        stats[t["team"]]["groups"] += 1   # bottom 4 thirds → out
+    # Bottom 4 third-place teams → eliminated in group stage
+    thirds = sorted(
+        ((letter, all_standings[letter][2]) for letter in group_letters),
+        key=lambda x: (x[1]["pts"], x[1]["gd"], x[1]["gf"]),
+        reverse=True,
+    )
+    for _, s in thirds[8:]:
+        stats[s["team"]]["groups"] += 1
 
-    # --- Build R32 bracket ---
-    # 12 cross-group pairs (1A v 2B, 1B v 2A, …) + 4 pairs from best thirds
-    r32: List[Tuple[str, str]] = []
-    for i in range(0, len(group_letters), 2):
-        g1, g2 = group_letters[i], group_letters[i + 1]
-        r32.append((winners_by_group[g1], runners_by_group[g2]))
-        r32.append((winners_by_group[g2], runners_by_group[g1]))
-
-    # Seeded bracket for the 8 best thirds: strongest vs weakest (1v8, 2v7, 3v6, 4v5).
-    # thirds is already sorted best-first by (pts, gd, gf).
-    n = len(best_thirds)
-    for k in range(n // 2):
-        r32.append((best_thirds[k], best_thirds[n - 1 - k]))
-
-    r32_flat = [t for pair in r32 for t in pair]  # 32 teams in bracket order
+    # --- Build R32 bracket using official FIFA structure ---
+    r32_matches = build_r32_from_standings(all_standings, group_letters)
+    r32_flat = [t for m in r32_matches for t in (m["t1"], m["t2"])]
 
     # --- Knockout rounds ---
     round_map = [

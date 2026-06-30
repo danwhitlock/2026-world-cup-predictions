@@ -27,6 +27,7 @@ from src.fixtures import DISPLAY_NAMES, GROUPS
 from src.tournament_state import (
     KNOCKOUT_ROUNDS,
     all_group_pairs,
+    compute_round_fixtures,
     load_results,
     save_results,
 )
@@ -71,7 +72,8 @@ def _run_simulation(n_sims: int) -> None:
     )
 
     _sim_status["message"] = "Generating chart…"
-    generate_html(model, stats, group_outcomes, GROUPS, n_sims, _HTML_PATH)
+    generate_html(model, stats, group_outcomes, GROUPS, n_sims, _HTML_PATH,
+                  actual_state=actual_state)
 
 
 def _sim_worker(n_sims: int) -> None:
@@ -217,6 +219,19 @@ def api_delete_knockout_result():
     return jsonify({"ok": True})
 
 
+@app.route("/api/fixtures")
+def api_fixtures():
+    """Return knockout fixtures for all rounds (None if not yet determinable)."""
+    state = load_results()
+    result = {}
+    for rnd in KNOCKOUT_ROUNDS:
+        fx = compute_round_fixtures(rnd, state, GROUPS)
+        result[rnd] = (
+            [{"t1": f["t1"], "t2": f["t2"]} for f in fx] if fx is not None else None
+        )
+    return jsonify(result)
+
+
 @app.route("/api/simulate", methods=["POST"])
 def api_simulate():
     with _sim_lock:
@@ -346,7 +361,7 @@ html.light #wc-live-panel,html.light #wc-overlay{
   --orange:#C4501E;--teal:#1A7A6E;
 }
 html.light .wc-si,html.light .wc-ko-row input,
-html.light #wc-ko-rnd,html.light #wc-ko-pens input{
+html.light #wc-ko-rnd,html.light .wc-ko-pens-row select{
   background:#F5F0E4;
 }
 /* ── Light mode: main page overrides ───────────────────────── */
@@ -514,6 +529,24 @@ html.light .match-row.winner{background:rgba(196,80,30,0.10)}
   text-align:center;white-space:nowrap;padding:0 6px}
 .wc-fx-vs{color:var(--text-3);font-size:10px;text-align:center;padding:0 6px}
 .wc-fx.played .wc-fx-tn{color:var(--text-2)}
+.wc-ko-section{margin-bottom:22px}
+.wc-ko-section-hdr{display:flex;align-items:center;justify-content:space-between;
+  padding:5px 0 8px;border-bottom:1px solid var(--border);margin-bottom:10px;
+  font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--teal)}
+.wc-ko-pending{color:var(--text-3);font-weight:400;letter-spacing:0;
+  text-transform:none;font-size:11px}
+.wc-ko-count{color:var(--text-3);font-weight:400;letter-spacing:0;text-transform:none}
+.wc-ko-pens-row{margin:-4px 0 8px;padding:6px 10px;
+  background:var(--surface-2);border:1px solid var(--border);
+  display:flex;align-items:center;gap:8px}
+.wc-ko-pens-row label{font-size:11px;color:var(--text-2);white-space:nowrap}
+.wc-ko-pens-row select{flex:1;padding:4px 7px;border:1px solid var(--border);
+  background:var(--bg,#1C1A15);color:var(--text);font-size:12px;cursor:pointer}
+.wc-ko-pens-row select:focus{outline:none;border-color:var(--orange)}
+.wc-pens-note{font-size:11px;color:var(--orange);padding:0 0 8px 4px;margin-top:-2px}
+.wc-tn.ko-win{color:var(--orange)!important;font-weight:700}
+.wc-tn.ko-lose{color:var(--text-3)!important}
 </style>
 
 <!-- Theme toggle -->
@@ -547,29 +580,7 @@ html.light .match-row.winner{background:rgba(196,80,30,0.10)}
       <div id="wc-gm"></div>
     </div>
     <div id="wc-pk" style="display:none">
-      <div id="wc-ko-add">
-        <h4>Add knockout result</h4>
-        <div class="wc-ko-row">
-          <input id="wc-kt1" placeholder="Team 1 name">
-          <input id="wc-ks1" type="number" min="0" max="20" placeholder="0" class="wc-ko-si">
-          <span class="wc-sep">–</span>
-          <input id="wc-ks2" type="number" min="0" max="20" placeholder="0" class="wc-ko-si">
-          <input id="wc-kt2" placeholder="Team 2 name">
-        </div>
-        <select id="wc-ko-rnd">
-          <option value="r32">Round of 32</option>
-          <option value="r16">Round of 16</option>
-          <option value="quarter">Quarter-Finals</option>
-          <option value="semi">Semi-Finals</option>
-          <option value="final">Final</option>
-        </select>
-        <div id="wc-ko-pens">
-          <label>Draw after 90 min — who won on penalties?</label>
-          <input id="wc-kpw" placeholder="Penalty winner">
-        </div>
-        <button class="wc-add-btn" onclick="wcSaveKo()">Add Result</button>
-      </div>
-      <div id="wc-kl"></div>
+      <div id="wc-ko-rounds"></div>
     </div>
   </div>
   <div id="wc-footer">
@@ -639,7 +650,7 @@ function wcTab(name,btn){
   btn.classList.add('active');
   document.getElementById('wc-pg').style.display=name==='groups'?'':'none';
   document.getElementById('wc-pk').style.display=name==='knockout'?'':'none';
-  if(name==='knockout') wcRenderKoList();
+  if(name==='knockout') wcLoadKo();
 }
 window.wcTab=wcTab;
 
@@ -727,73 +738,127 @@ async function wcClearG(letter,t1,t2){
 window.wcClearG=wcClearG;
 
 // ── Knockout ──────────────────────────────────────────────────
-['wc-ks1','wc-ks2'].forEach(id=>{
-  document.getElementById(id).addEventListener('input',()=>{
-    const s1=document.getElementById('wc-ks1').value;
-    const s2=document.getElementById('wc-ks2').value;
-    document.getElementById('wc-ko-pens').style.display=
-      (s1!==''&&s2!==''&&parseInt(s1)===parseInt(s2))?'block':'none';
-  });
-});
+async function wcLoadKo(){
+  const [fr,rr]=await Promise.all([fetch('/api/fixtures'),fetch('/api/results')]);
+  const fixtures=await fr.json();
+  R=await rr.json();
+  wcRenderKoSection(fixtures);
+}
 
-async function wcSaveKo(){
-  const t1=document.getElementById('wc-kt1').value.trim();
-  const s1=document.getElementById('wc-ks1').value;
-  const s2=document.getElementById('wc-ks2').value;
-  const t2=document.getElementById('wc-kt2').value.trim();
-  const rnd=document.getElementById('wc-ko-rnd').value;
-  const pw=document.getElementById('wc-kpw').value.trim();
-  if(!t1||!t2||s1===''||s2===''){alert('Fill in all fields.');return;}
+function wcRenderKoSection(fixtures){
+  const el=document.getElementById('wc-ko-rounds');
+  el.innerHTML='';
+  D.knockoutRounds.forEach(rnd=>{
+    const rxs=fixtures[rnd];
+    const entered=(R.knockout_results||{})[rnd]||[];
+    const sec=document.createElement('div');
+    sec.className='wc-ko-section';
+
+    const nEntered=rxs?rxs.filter(f=>entered.some(m=>
+      (m.team1===f.t1&&m.team2===f.t2)||(m.team1===f.t2&&m.team2===f.t1))).length:0;
+    const hdr=document.createElement('div');
+    hdr.className='wc-ko-section-hdr';
+    hdr.innerHTML=rxs
+      ?`<span>${D.knockoutLabels[rnd]}</span><span class="wc-ko-count">${nEntered}/${rxs.length}</span>`
+      :`<span>${D.knockoutLabels[rnd]}</span><span class="wc-ko-pending">complete earlier rounds first</span>`;
+    sec.appendChild(hdr);
+
+    if(rxs) rxs.forEach(f=>{
+      const er=entered.find(m=>(m.team1===f.t1&&m.team2===f.t2)||(m.team1===f.t2&&m.team2===f.t1));
+      let s1='',s2='';
+      if(er){
+        s1=er.team1===f.t1?er.team1_score:er.team2_score;
+        s2=er.team1===f.t1?er.team2_score:er.team1_score;
+      }
+      const uid=(rnd+f.t1+f.t2).replace(/\W/g,'');
+      const isPens=er&&parseInt(s1)===parseInt(s2)&&er.winner;
+      const t1WinCls=er?(er.winner===f.t1?' ko-win':' ko-lose'):'';
+      const t2WinCls=er?(er.winner===f.t2?' ko-win':' ko-lose'):'';
+
+      // fixture row
+      const row=document.createElement('div');
+      row.className='wc-match'+(er?' has-r':'');
+      row.innerHTML=`
+        <span class="wc-tn right${t1WinCls}">${dn(f.t1)}</span>
+        <input class="wc-si" id="h${uid}" type="number" min="0" max="20"
+          value="${s1}" placeholder="–">
+        <span class="wc-sep">–</span>
+        <input class="wc-si" id="a${uid}" type="number" min="0" max="20"
+          value="${s2}" placeholder="–">
+        <span class="wc-tn${t2WinCls}">${dn(f.t2)}</span>
+        <div class="wc-actions">
+          <button class="wc-save${er?' saved':''}" id="sb${uid}"
+            onclick="wcSaveKoFx('${rnd}','${f.t1}','${f.t2}','${uid}')">
+            ${er?'✓ Saved':'Save'}</button>
+          <button class="wc-clr"
+            onclick="wcClearKoFx('${rnd}','${f.t1}','${f.t2}')">✕</button>
+        </div>`;
+      sec.appendChild(row);
+
+      // "X win on penalties" note beneath draw results
+      if(isPens){
+        const note=document.createElement('div');
+        note.className='wc-pens-note';
+        note.textContent=`${dn(er.winner)} win on penalties`;
+        sec.appendChild(note);
+      }
+
+      // penalty dropdown (visible when user types a draw score)
+      const pensRow=document.createElement('div');
+      pensRow.id='pens'+uid;
+      pensRow.className='wc-ko-pens-row';
+      pensRow.style.display=isPens?'flex':'none';
+      const pensWinner=isPens?er.winner:'';
+      pensRow.innerHTML=`<label>Penalties – who won?</label>
+        <select id="pw${uid}">
+          <option value="">— select —</option>
+          <option value="${f.t1}"${pensWinner===f.t1?' selected':''}>${dn(f.t1)}</option>
+          <option value="${f.t2}"${pensWinner===f.t2?' selected':''}>${dn(f.t2)}</option>
+        </select>`;
+      sec.appendChild(pensRow);
+
+      // wire draw-detection after elements are in sec
+      ['h','a'].forEach(p=>{
+        sec.querySelector('#'+p+uid)?.addEventListener('input',()=>{
+          const v1=sec.querySelector('#h'+uid)?.value;
+          const v2=sec.querySelector('#a'+uid)?.value;
+          sec.querySelector('#pens'+uid).style.display=
+            (v1!==''&&v2!==''&&parseInt(v1)===parseInt(v2))?'flex':'none';
+        });
+      });
+    });
+
+    el.appendChild(sec);
+  });
+}
+
+async function wcSaveKoFx(rnd,t1,t2,uid){
+  const hs=document.getElementById('h'+uid)?.value;
+  const as_=document.getElementById('a'+uid)?.value;
+  if(hs===''||as_===''||hs==null){alert('Enter both scores first.');return;}
+  const isDraw=hs!==''&&as_!==''&&parseInt(hs)===parseInt(as_);
+  const pw=isDraw?(document.getElementById('pw'+uid)||{}).value||'':'';
+  if(isDraw&&!pw){alert('Select the penalty winner first.');return;}
   const body={round:rnd,team1:t1,team2:t2,
-    team1_score:parseInt(s1),team2_score:parseInt(s2)};
+    team1_score:parseInt(hs),team2_score:parseInt(as_)};
   if(pw) body.winner=pw;
   const r=await fetch('/api/results/knockout',{method:'POST',
     headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   const d=await r.json();
   if(d.error){alert(d.error);return;}
-  ['wc-kt1','wc-ks1','wc-ks2','wc-kt2','wc-kpw'].forEach(id=>{
-    document.getElementById(id).value='';});
-  document.getElementById('wc-ko-pens').style.display='none';
-  R=await(await fetch('/api/results')).json();
-  wcRenderKoList();
+  await wcLoadKo();
   if(liveOpen) wcLiveRefresh();
 }
-window.wcSaveKo=wcSaveKo;
+window.wcSaveKoFx=wcSaveKoFx;
 
-function wcRenderKoList(){
-  const el=document.getElementById('wc-kl');
-  el.innerHTML='';
-  const kr=R.knockout_results||{};
-  const labels=D.knockoutLabels;
-  let any=false;
-  D.knockoutRounds.forEach(rnd=>{
-    (kr[rnd]||[]).forEach(m=>{
-      any=true;
-      const div=document.createElement('div');
-      div.className='wc-ko-entry';
-      div.innerHTML=`<div>
-        <span class="wc-ko-rnd-lbl">${labels[rnd]}</span>
-        <span><strong>${dn(m.team1)} ${m.team1_score}–${m.team2_score} ${dn(m.team2)}</strong>
-        → <span style="color:#f59e0b">${dn(m.winner)}</span></span>
-      </div>
-      <button class="wc-del" onclick="wcDelKo('${rnd}','${m.team1}','${m.team2}')">✕</button>`;
-      el.appendChild(div);
-    });
-  });
-  if(!any){
-    el.innerHTML='<p style="color:#6b7280;font-size:12px;margin:0">No knockout results entered yet.</p>';
-  }
-}
-
-async function wcDelKo(rnd,t1,t2){
+async function wcClearKoFx(rnd,t1,t2){
   await fetch('/api/results/knockout',{method:'DELETE',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({round:rnd,team1:t1,team2:t2})});
-  R=await(await fetch('/api/results')).json();
-  wcRenderKoList();
+  await wcLoadKo();
   if(liveOpen) wcLiveRefresh();
 }
-window.wcDelKo=wcDelKo;
+window.wcClearKoFx=wcClearKoFx;
 
 // ── Regenerate ────────────────────────────────────────────────
 async function wcRegen(){

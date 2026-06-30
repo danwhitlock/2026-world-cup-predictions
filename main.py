@@ -91,7 +91,8 @@ def main():
 
     from src.chart import generate_html
     html_path = Path(__file__).parent / "predictions.html"
-    generate_html(model, stats, group_outcomes, GROUPS, n_sims, html_path)
+    generate_html(model, stats, group_outcomes, GROUPS, n_sims, html_path,
+                  actual_state=actual_state)
     print(f"\nWall chart saved to: {html_path}")
 
 

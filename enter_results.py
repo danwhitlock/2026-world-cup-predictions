@@ -139,13 +139,87 @@ _ROUND_LABELS = {
 }
 
 
-def _enter_knockout(round_name: str, state: dict) -> None:
-    label = _ROUND_LABELS.get(round_name, round_name.upper())
-    print(f"\n--- {label} ---")
-    print("Enter: team1 score-score team2  (e.g.  Spain 2-0 Morocco)")
-    print("Press Enter with no input when done.\n")
+def _record_knockout_match(t1: str, t2: str, state_round_existing: list) -> dict | None:
+    """
+    Prompt for a score between t1 and t2. Returns a result dict or None if skipped.
+    `state_round_existing` is used only to show the previously-entered winner.
+    """
+    existing_entry = next(
+        (m for m in state_round_existing
+         if frozenset({m["team1"], m["team2"]}) == frozenset({t1, t2})),
+        None,
+    )
+    if existing_entry:
+        prompt = (f"  {dn(t1)} vs {dn(t2)}"
+                  f" [entered: {dn(existing_entry['winner'])} won"
+                  f" — re-enter to overwrite or skip]: ")
+    else:
+        prompt = f"  {dn(t1)} vs {dn(t2)}: "
 
+    raw = input(prompt).strip()
+    if not raw:
+        return None
+
+    score = _parse_score(raw)
+    while score is None:
+        raw = input("    Bad format — try again (e.g. 2-1): ").strip()
+        if not raw:
+            return None
+        score = _parse_score(raw)
+
+    t1s, t2s = score
+    winner = t1 if t1s > t2s else (t2 if t2s > t1s else None)
+    if winner is None:
+        pw = input(f"  Draw after 90 min — who won on penalties?"
+                   f" [{dn(t1)} / {dn(t2)}]: ").strip()
+        winner = _fuzzy_match(pw)
+        if not winner:
+            print("  Unrecognised team name — skipping match.")
+            return None
+
+    print(f"  Recorded: {dn(t1)} {t1s}–{t2s} {dn(t2)}  →  winner: {dn(winner)}")
+    return {"team1": t1, "team2": t2, "team1_score": t1s, "team2_score": t2s,
+            "winner": winner}
+
+
+def _enter_knockout(round_name: str, state: dict) -> None:
+    from src.tournament_state import compute_round_fixtures
+
+    label = _ROUND_LABELS.get(round_name, round_name.upper())
     existing = state.get("knockout_results", {}).get(round_name, [])
+
+    fixtures = compute_round_fixtures(round_name, state)
+
+    if fixtures is not None:
+        # Auto-populated: show each match and ask for the score
+        print(f"\n--- {label} ---")
+        print("Enter score as  home-away  (e.g. 2-1) or press Enter to skip.\n")
+
+        existing_pairs = {frozenset({m["team1"], m["team2"]}) for m in existing}
+        new_matches = []
+        for f in fixtures:
+            result = _record_knockout_match(f["t1"], f["t2"], existing)
+            if result is None:
+                continue
+            # Replace any previous entry for this pair
+            pair = frozenset({f["t1"], f["t2"]})
+            existing = [m for m in existing
+                        if frozenset({m["team1"], m["team2"]}) != pair]
+            new_matches.append(result)
+
+        if new_matches:
+            state.setdefault("knockout_results", {})[round_name] = existing + new_matches
+            save_results(state)
+            print(f"\n  Saved {len(new_matches)} result(s) for {label}.")
+        else:
+            print("  Nothing changed.")
+        return
+
+    # Fallback: free-form entry when fixtures can't yet be determined
+    print(f"\n--- {label} ---")
+    print("Enter: team1 score-score team2  (e.g.  France 2-0 England)")
+    print("(Tip: complete earlier rounds first to get auto-populated fixtures.)")
+    print("Press Enter with no input when done.\n")
 
     new_matches = []
     while True:
@@ -154,11 +228,9 @@ def _enter_knockout(round_name: str, state: dict) -> None:
             break
 
         parts = raw.split()
-        # Find the score token (contains a dash and two digits)
         score_idx = None
         for i, p in enumerate(parts):
-            s = _parse_score(p)
-            if s is not None:
+            if _parse_score(p) is not None:
                 score_idx = i
                 break
 
@@ -170,7 +242,6 @@ def _enter_knockout(round_name: str, state: dict) -> None:
         team2 = " ".join(parts[score_idx + 1:])
         t1s, t2s = _parse_score(parts[score_idx])
 
-        # Fuzzy-match team names against known fixtures
         team1_key = _fuzzy_match(team1)
         team2_key = _fuzzy_match(team2)
 
@@ -179,27 +250,15 @@ def _enter_knockout(round_name: str, state: dict) -> None:
             print(f"  Unrecognised team: '{unknown}'. Check spelling and try again.")
             continue
 
-        winner = team1_key if t1s > t2s else (team2_key if t2s > t1s else None)
-        if winner is None:
-            pw = input(f"  Draw after 90 min — who won on penalties? "
-                       f"[{dn(team1_key)} / {dn(team2_key)}]: ").strip()
-            winner = _fuzzy_match(pw)
-            if not winner:
-                print("  Unrecognised team name — skipping match.")
-                continue
-
-        new_matches.append({
-            "team1": team1_key, "team2": team2_key,
-            "team1_score": t1s, "team2_score": t2s,
-            "winner": winner,
-        })
-        print(f"  Recorded: {dn(team1_key)} {t1s}–{t2s} {dn(team2_key)}"
-              f"  →  winner: {dn(winner)}")
+        result = _record_knockout_match(team1_key, team2_key, existing)
+        if result:
+            pair = frozenset({team1_key, team2_key})
+            existing = [m for m in existing
+                        if frozenset({m["team1"], m["team2"]}) != pair]
+            new_matches.append(result)
 
     if new_matches:
-        state.setdefault("knockout_results", {})[round_name] = (
-            existing + new_matches
-        )
+        state.setdefault("knockout_results", {})[round_name] = existing + new_matches
         save_results(state)
         print(f"\n  Saved {len(new_matches)} result(s) for {label}.")
     else:
