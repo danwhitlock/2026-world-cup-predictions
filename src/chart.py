@@ -226,6 +226,24 @@ def _groups_html(groups: dict, group_outcomes: dict, n_sims: int, stats: dict) -
     return "\n".join(cards)
 
 
+def _actual_ko_result(actual_state: dict, round_name: str, t1: str, t2: str):
+    """Return (winner, score_t1, score_t2) if an actual result exists, else None."""
+    if actual_state is None:
+        return None
+    pair = frozenset({t1, t2})
+    for m in actual_state.get("knockout_results", {}).get(round_name, []):
+        if frozenset({m["team1"], m["team2"]}) == pair:
+            winner = m["winner"]
+            if m["team1"] == t1:
+                return winner, m.get("team1_score"), m.get("team2_score")
+            else:
+                return winner, m.get("team2_score"), m.get("team1_score")
+    return None
+
+
+_KO_ROUND_NAMES = ["r32", "r16", "quarter", "semi", "final"]
+
+
 def _match_html(m: dict) -> str:
     """Render a single knockout match cell."""
     if not isinstance(m, dict) or "t1" not in m:
@@ -235,24 +253,44 @@ def _match_html(m: dict) -> str:
     p1 = m.get("p1", 0.5)
     p2 = m.get("p2", 0.5)
     winner = m.get("winner", "")
+    is_actual = m.get("actual", False)
+    score1 = m.get("score1")
+    score2 = m.get("score2")
 
-    def team_row(name, prob, is_w):
+    def team_row(name, prob, is_w, score=None):
         cls = "match-row winner" if is_w else "match-row"
-        return f"""<div class="{cls}"><span>{name}</span><span class="match-pct">{prob*100:.0f}%</span></div>"""
+        if is_actual and score is not None:
+            right = f'<span class="match-score">{score}</span>'
+        else:
+            right = f'<span class="match-pct">{prob*100:.0f}%</span>'
+        return f'<div class="{cls}"><span>{name}</span>{right}</div>'
 
-    return f"""<div class="match">
-        {team_row(t1, p1, winner == m['t1'])}
-        {team_row(t2, p2, winner == m.get('t2', ''))}
+    extra_cls = " match-actual" if is_actual else ""
+    return f"""<div class="match{extra_cls}">
+        {team_row(t1, p1, winner == m['t1'], score1)}
+        {team_row(t2, p2, winner == m.get('t2', ''), score2)}
       </div>"""
 
 
-def _bracket_html(model, r32: list[dict], stats: dict, n_sims: int) -> str:
+def _bracket_html(model, r32: list[dict], stats: dict, n_sims: int,
+                  actual_state: dict = None) -> str:
     """Build the full bracket HTML from R32 through Final."""
 
     def get_team(m):
         return m["winner"] if isinstance(m, dict) and "winner" in m else m
 
     def make_match(t1, t2, round_idx, label=""):
+        round_name = _KO_ROUND_NAMES[round_idx] if round_idx < len(_KO_ROUND_NAMES) else None
+        if round_name:
+            result = _actual_ko_result(actual_state, round_name, t1, t2)
+            if result is not None:
+                winner, s1, s2 = result
+                return {"t1": t1, "t2": t2,
+                        "p1": 1.0 if winner == t1 else 0.0,
+                        "p2": 1.0 if winner == t2 else 0.0,
+                        "winner": winner, "label": label,
+                        "actual": True, "score1": s1, "score2": s2}
+
         if round_idx == 4:
             # Final: compare raw champion counts so the bracket winner always
             # equals the MC leader shown in the hero box.
@@ -653,6 +691,19 @@ _CSS = """
 
     .match-row.winner .match-pct { color: var(--orange); }
 
+    .match.match-actual { border-color: var(--teal); }
+
+    .match-score {
+      font-size: 10px;
+      color: var(--teal);
+      margin-left: 6px;
+      min-width: 28px;
+      text-align: right;
+      font-weight: 700;
+    }
+
+    .match-row.winner .match-score { color: var(--teal); }
+
     /* Final column */
     .bracket-final {
       display: flex;
@@ -783,7 +834,7 @@ def generate_html(model, stats: dict, group_outcomes: dict,
     r32 = _build_r32(group_outcomes, n_sims, groups, actual_state)
 
     groups_html   = _groups_html(groups, group_outcomes, n_sims, stats)
-    bracket_html  = _bracket_html(model, r32, stats, n_sims)
+    bracket_html  = _bracket_html(model, r32, stats, n_sims, actual_state=actual_state)
     prob_bars     = _prob_bars_html(stats, n_sims)
 
     predicted_champ_team = max(stats, key=lambda t: stats[t]["champion"])
@@ -862,7 +913,7 @@ function toggleTheme() {{
     <div class="section-eyebrow"><span class="line"></span><span class="label">Knockout Stage</span></div>
     <h2>Knockout Bracket (Most Likely Progression)</h2>
   </div>
-  <p class="section-note">Each match shows the two most likely teams. Percentage = probability of winning the tournament from this point (given the team reached this round). Highlighted = predicted winner.</p>
+  <p class="section-note">Completed matches show the actual score (teal border). Upcoming matches show % probability of winning the tournament from this point. Highlighted = winner or predicted winner.</p>
   {bracket_html}
 
   <div class="section-head">

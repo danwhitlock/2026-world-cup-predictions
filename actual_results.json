@@ -486,6 +486,134 @@
         "team1_score": 1,
         "team2_score": 1,
         "winner": "Paraguay"
+      },
+      {
+        "team1": "Ivory Coast",
+        "team2": "Norway",
+        "team1_score": 1,
+        "team2_score": 2,
+        "winner": "Norway"
+      },
+      {
+        "team1": "France",
+        "team2": "Sweden",
+        "team1_score": 3,
+        "team2_score": 0,
+        "winner": "France"
+      },
+      {
+        "team1": "Mexico",
+        "team2": "Ecuador",
+        "team1_score": 2,
+        "team2_score": 0,
+        "winner": "Mexico"
+      },
+      {
+        "team1": "England",
+        "team2": "DR Congo",
+        "team1_score": 2,
+        "team2_score": 1,
+        "winner": "England"
+      },
+      {
+        "team1": "Belgium",
+        "team2": "Senegal",
+        "team1_score": 3,
+        "team2_score": 2,
+        "winner": "Belgium"
+      },
+      {
+        "team1": "United States",
+        "team2": "Bosnia and Herzegovina",
+        "team1_score": 2,
+        "team2_score": 0,
+        "winner": "United States"
+      },
+      {
+        "team1": "Spain",
+        "team2": "Austria",
+        "team1_score": 3,
+        "team2_score": 0,
+        "winner": "Spain"
+      },
+      {
+        "team1": "Portugal",
+        "team2": "Croatia",
+        "team1_score": 2,
+        "team2_score": 1,
+        "winner": "Portugal"
+      },
+      {
+        "team1": "Switzerland",
+        "team2": "Algeria",
+        "team1_score": 2,
+        "team2_score": 0,
+        "winner": "Switzerland"
+      },
+      {
+        "team1": "Argentina",
+        "team2": "Cape Verde",
+        "team1_score": 3,
+        "team2_score": 2,
+        "winner": "Argentina"
+      },
+      {
+        "team1": "Australia",
+        "team2": "Egypt",
+        "team1_score": 1,
+        "team2_score": 1,
+        "winner": "Egypt"
+      },
+      {
+        "team1": "Colombia",
+        "team2": "Ghana",
+        "team1_score": 1,
+        "team2_score": 0,
+        "winner": "Colombia"
+      }
+    ],
+    "r16": [
+      {
+        "team1": "Canada",
+        "team2": "Morocco",
+        "team1_score": 0,
+        "team2_score": 3,
+        "winner": "Morocco"
+      },
+      {
+        "team1": "Paraguay",
+        "team2": "France",
+        "team1_score": 0,
+        "team2_score": 1,
+        "winner": "France"
+      },
+      {
+        "team1": "Brazil",
+        "team2": "Norway",
+        "team1_score": 1,
+        "team2_score": 2,
+        "winner": "Norway"
+      },
+      {
+        "team1": "Mexico",
+        "team2": "England",
+        "team1_score": 2,
+        "team2_score": 3,
+        "winner": "England"
+      },
+      {
+        "team1": "Portugal",
+        "team2": "Spain",
+        "team1_score": 0,
+        "team2_score": 1,
+        "winner": "Spain"
+      },
+      {
+        "team1": "United States",
+        "team2": "Belgium",
+        "team1_score": 1,
+        "team2_score": 4,
+        "winner": "Belgium"
       }
     ]
   }
